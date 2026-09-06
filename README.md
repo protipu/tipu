@@ -16,7 +16,7 @@ Tipu is a single-user chat interface that:
 - **State**: React Context + built-in hooks only
 - **Backend**: Supabase (Postgres, Auth, Edge Functions)
 - **AI**: Google Gemini API (server-side only via Supabase Edge Functions)
-- **Hosting**: Cloudflare Pages (auto-deploy on push to `master`)
+- **Hosting**: Vercel (auto-deploy on push to `master`)
 
 ## Architecture
 
@@ -63,7 +63,7 @@ create table memory_facts (
 
 | Phase | Status | Description |
 |-------|--------|-------------|
-| 0 | ✅ | Vite + React + TS + Tailwind scaffold, Cloudflare Pages config |
+| 0 | ✅ | Vite + React + TS + Tailwind scaffold, Vercel config |
 | 1 | 🔄 | Supabase email/password auth, login screen, session persistence |
 | 2 | ⏳ | Core chat loop (UI + Edge Function, no memory/persistence) |
 | 3 | ⏳ | Persist messages, load conversation history on reload |
@@ -92,8 +92,8 @@ npm run lint
 
 ## Deployment
 
-- **Cloudflare Pages**: Auto-deploys on push to `master` via GitHub Actions (`.github/workflows/deploy.yml`)
-- **Environment variables** (set in Cloudflare Pages dashboard):
+- **Vercel**: Auto-deploys on push to `master` via GitHub Actions (`.github/workflows/deploy.yml`)
+- **Environment variables** (set in Vercel dashboard):
   - `VITE_SUPABASE_URL`
   - `VITE_SUPABASE_ANON_KEY`
 - **Edge Function secrets** (set in Supabase dashboard):
