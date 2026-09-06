@@ -89,7 +89,7 @@ Keep responses natural and concise. Don't over-explain. Use casual language.`;
     console.log('Calling Gemini API...');
     
     const geminiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${geminiApiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${geminiApiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -105,7 +105,7 @@ Keep responses natural and concise. Don't over-explain. Use casual language.`;
             maxOutputTokens: 1024,
           },
         }),
-        signal: AbortSignal.timeout(15000),
+        signal: AbortSignal.timeout(30000),
       }
     );
 
