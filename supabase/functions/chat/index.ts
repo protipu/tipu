@@ -8,6 +8,10 @@ const corsHeaders = {
 };
 
 serve(async (req: Request) => {
+  console.log('=== Chat function invoked ===');
+  console.log('Method:', req.method);
+  console.log('Headers:', Object.fromEntries(req.headers.entries()));
+
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -24,20 +28,52 @@ serve(async (req: Request) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const geminiApiKey = Deno.env.get('GEMINI_API_KEY')!;
 
+    console.log('Env vars loaded:', { 
+      hasSupabaseUrl: !!supabaseUrl, 
+      hasServiceKey: !!supabaseServiceKey, 
+      hasGeminiKey: !!geminiApiKey 
+    });
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const authHeader = req.headers.get('Authorization')!;
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-
-    if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+    const authHeader = req.headers.get('Authorization');
+    console.log('Auth header present:', !!authHeader);
+    
+    if (!authHeader) {
+      console.error('No Authorization header');
+      return new Response(JSON.stringify({ error: 'Missing Authorization header' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const { message } = await req.json();
+    const token = authHeader.replace('Bearer ', '');
+    console.log('Token length:', token.length);
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    console.log('Auth result:', { user: !!user, authError: authError?.message });
+
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized', details: authError?.message }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    let body;
+    try {
+      body = await req.json();
+    } catch (e) {
+      console.error('Failed to parse JSON body:', e);
+      return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const { message } = body;
+    console.log('Message received:', message?.substring(0, 50));
 
     if (!message || typeof message !== 'string' || !message.trim()) {
       return new Response(JSON.stringify({ error: 'Message is required' }), {
@@ -50,7 +86,7 @@ serve(async (req: Request) => {
 
 Keep responses natural and concise. Don't over-explain. Use casual language.`;
 
-    console.log('Calling Gemini API with key:', geminiApiKey.substring(0, 10) + '...');
+    console.log('Calling Gemini API...');
     
     const geminiResponse = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${geminiApiKey}`,
@@ -83,6 +119,8 @@ Keep responses natural and concise. Don't over-explain. Use casual language.`;
 
     const geminiData = await geminiResponse.json();
     const reply = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+
+    console.log('Gemini reply:', reply?.substring(0, 50));
 
     if (!reply) {
       throw new Error('Empty response from Gemini');
