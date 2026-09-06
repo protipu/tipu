@@ -7,10 +7,12 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
+const GROQ_API_KEY = Deno.env.get('GROQ_API_KEY')!;
+const GROQ_MODEL = 'groq/compound';
+
 serve(async (req: Request) => {
   console.log('=== Chat function invoked ===');
   console.log('Method:', req.method);
-  console.log('Headers:', Object.fromEntries(req.headers.entries()));
 
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -26,13 +28,8 @@ serve(async (req: Request) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const geminiApiKey = Deno.env.get('GEMINI_API_KEY')!;
 
-    console.log('Env vars loaded:', { 
-      hasSupabaseUrl: !!supabaseUrl, 
-      hasServiceKey: !!supabaseServiceKey, 
-      hasGeminiKey: !!geminiApiKey 
-    });
+    console.log('Env vars loaded OK');
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -40,7 +37,6 @@ serve(async (req: Request) => {
     console.log('Auth header present:', !!authHeader);
     
     if (!authHeader) {
-      console.error('No Authorization header');
       return new Response(JSON.stringify({ error: 'Missing Authorization header' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -48,8 +44,6 @@ serve(async (req: Request) => {
     }
 
     const token = authHeader.replace('Bearer ', '');
-    console.log('Token length:', token.length);
-    
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
 
     console.log('Auth result:', { user: !!user, authError: authError?.message });
@@ -61,22 +55,12 @@ serve(async (req: Request) => {
       });
     }
 
-    let body;
-    try {
-      body = await req.json();
-    } catch (e) {
-      console.error('Failed to parse JSON body:', e);
-      return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
+    const body = await req.json();
     const { message } = body;
-    console.log('Message received:', message?.substring(0, 50));
+    console.log('Message:', message);
 
-    if (!message || typeof message !== 'string' || !message.trim()) {
-      return new Response(JSON.stringify({ error: 'Message is required' }), {
+    if (!message?.trim()) {
+      return new Response(JSON.stringify({ error: 'Message required' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -86,53 +70,54 @@ serve(async (req: Request) => {
 
 Keep responses natural and concise. Don't over-explain. Use casual language.`;
 
-    console.log('Calling Gemini API...');
+    console.log('Calling Groq API...');
     
-    const geminiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${geminiApiKey}`,
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 25000);
+
+    const groqResponse = await fetch(
+      'https://api.groq.com/openai/v1/chat/completions',
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${GROQ_API_KEY}`,
+        },
         body: JSON.stringify({
-          contents: [
-            { role: 'user', parts: [{ text: systemPrompt }] },
-            { role: 'model', parts: [{ text: 'Got it. I am Tipu — warm, friendly, and I remember. How can I help?' }] },
-            { role: 'user', parts: [{ text: message }] },
+          model: GROQ_MODEL,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'assistant', content: 'Got it. I am Tipu — warm, friendly, and I remember. How can I help?' },
+            { role: 'user', content: message },
           ],
-          generationConfig: {
-            temperature: 0.7,
-            topP: 0.9,
-            maxOutputTokens: 1024,
-          },
+          max_tokens: 1024,
+          temperature: 0.7,
+          top_p: 0.9,
         }),
-        signal: AbortSignal.timeout(30000),
+        signal: controller.signal,
       }
     );
 
-    console.log('Gemini response status:', geminiResponse.status);
+    clearTimeout(timeoutId);
+    console.log('Groq status:', groqResponse.status);
 
-    if (!geminiResponse.ok) {
-      const errorData = await geminiResponse.json().catch(() => ({}));
-      console.error('Gemini API error:', geminiResponse.status, errorData);
-      throw new Error(`Gemini API error: ${geminiResponse.status} - ${JSON.stringify(errorData)}`);
+    if (!groqResponse.ok) {
+      const err = await groqResponse.json().catch(() => ({}));
+      console.error('Groq error:', err);
+      throw new Error(`Groq ${groqResponse.status}: ${JSON.stringify(err)}`);
     }
 
-    const geminiData = await geminiResponse.json();
-    const reply = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-
-    console.log('Gemini reply:', reply?.substring(0, 50));
-
-    if (!reply) {
-      throw new Error('Empty response from Gemini');
-    }
+    const data = await groqResponse.json();
+    const reply = data?.choices?.[0]?.message?.content?.trim() || 'No reply';
+    console.log('Reply:', reply.substring(0, 50));
 
     return new Response(JSON.stringify({ reply }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : 'Internal server error';
-    console.error('Chat function error:', errorMessage);
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    const msg = err instanceof Error ? err.message : 'Error';
+    console.error('Function error:', msg);
+    return new Response(JSON.stringify({ error: msg }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
