@@ -50,8 +50,10 @@ serve(async (req: Request) => {
 
 Keep responses natural and concise. Don't over-explain. Use casual language.`;
 
+    console.log('Calling Gemini API with key:', geminiApiKey.substring(0, 10) + '...');
+    
     const geminiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${geminiApiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -71,10 +73,12 @@ Keep responses natural and concise. Don't over-explain. Use casual language.`;
       }
     );
 
+    console.log('Gemini response status:', geminiResponse.status);
+
     if (!geminiResponse.ok) {
       const errorData = await geminiResponse.json().catch(() => ({}));
       console.error('Gemini API error:', geminiResponse.status, errorData);
-      throw new Error(`Gemini API error: ${geminiResponse.status}`);
+      throw new Error(`Gemini API error: ${geminiResponse.status} - ${JSON.stringify(errorData)}`);
     }
 
     const geminiData = await geminiResponse.json();
