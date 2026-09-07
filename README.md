@@ -57,6 +57,17 @@ create table memory_facts (
 );
 
 -- Row Level Security on both tables
+alter table messages enable row level security;
+alter table memory_facts enable row level security;
+
+create policy "Users can access own messages" on messages
+  for all using (auth.uid() = user_id);
+
+create policy "Users can access own memory facts" on memory_facts
+  for all using (auth.uid() = user_id);
+
+create index messages_user_id_created_at_idx on messages (user_id, created_at);
+create index memory_facts_user_id_idx on memory_facts (user_id);
 ```
 
 ## Build Phases
@@ -66,21 +77,21 @@ create table memory_facts (
 | 0 | ✅ | Vite + React + TS + Tailwind scaffold, Vercel config |
 | 1 | ✅ | Supabase email/password auth, login screen, session persistence, logout |
 | 2 | ✅ | Core chat loop (UI + Edge Function → Groq API, error/timeout/retry handling) |
-| 3 | 🔄 | Persist messages, load conversation history on reload |
-| 4 | ⏳ | Long-term memory (fact extraction + recall) |
+| 3 | ✅ | Persist messages, load conversation history on reload |
+| 4 | 🔄 | Long-term memory (fact extraction + recall) |
 | 5 | ⏳ | Polish: theme, responsive, empty/loading/error states |
 | 6 | ⏳ | Capacitor Android APK (later) |
 
-## What's Done (Phases 0-2)
+## What's Done (Phases 0-3)
 
 - **Phase 0**: Scaffold, Vercel deployment pipeline, GitHub Actions CI/CD
 - **Phase 1**: Supabase Auth with email/password, login/signup screen, session persistence, logout
 - **Phase 2**: Chat UI (MessageList, MessageInput, MessageBubble), Supabase Edge Function with Groq API, 25s timeout, retry button on error, auth verification
+- **Phase 3**: `messages` table with RLS, save user/assistant messages, load last 20 messages on page load, include history in Groq context
 
 ## What's Remaining
 
-- **Phase 3 (current)**: Create `messages` table, save user/assistant messages, load history on page load
-- **Phase 4**: Create `memory_facts` table, add fact-extraction step in Edge Function, inject facts into system prompt
+- **Phase 4 (current)**: Create `memory_facts` table, add fact-extraction step in Edge Function, inject facts into system prompt for personalized replies
 - **Phase 5**: Mobile responsive polish, loading skeletons, better empty states, scroll behavior
 - **Phase 6**: Capacitor wrapper for Android APK
 
