@@ -15,15 +15,15 @@ Tipu is a single-user chat interface that:
 - **Styling**: Tailwind CSS v4 (white/bluish minimalist theme)
 - **State**: React Context + built-in hooks only
 - **Backend**: Supabase (Postgres, Auth, Edge Functions)
-- **AI**: Google Gemini API (server-side only via Supabase Edge Functions)
-- **Hosting**: Vercel (auto-deploy on push to `master`)
+- **AI**: Groq API (`groq/compound` model) via Supabase Edge Functions
+- **Hosting**: Vercel (auto-deploy on push to `main`)
 
 ## Architecture
 
 ```
 ┌─────────────┐     ┌──────────────────┐     ┌─────────────┐
-│   Browser   │────▶│  Supabase Edge   │────▶│   Gemini    │
-│   (React)   │     │  Function: chat  │     │   API       │
+│   Browser   │────▶│  Supabase Edge   │────▶│   Groq API  │
+│   (React)   │     │  Function: chat  │     │   (Llama)   │
 └─────────────┘     └──────────────────┘     └─────────────┘
        │                    │
        │                    ▼
@@ -64,12 +64,25 @@ create table memory_facts (
 | Phase | Status | Description |
 |-------|--------|-------------|
 | 0 | ✅ | Vite + React + TS + Tailwind scaffold, Vercel config |
-| 1 | 🔄 | Supabase email/password auth, login screen, session persistence |
-| 2 | ⏳ | Core chat loop (UI + Edge Function, no memory/persistence) |
-| 3 | ⏳ | Persist messages, load conversation history on reload |
+| 1 | ✅ | Supabase email/password auth, login screen, session persistence, logout |
+| 2 | ✅ | Core chat loop (UI + Edge Function → Groq API, error/timeout/retry handling) |
+| 3 | 🔄 | Persist messages, load conversation history on reload |
 | 4 | ⏳ | Long-term memory (fact extraction + recall) |
 | 5 | ⏳ | Polish: theme, responsive, empty/loading/error states |
 | 6 | ⏳ | Capacitor Android APK (later) |
+
+## What's Done (Phases 0-2)
+
+- **Phase 0**: Scaffold, Vercel deployment pipeline, GitHub Actions CI/CD
+- **Phase 1**: Supabase Auth with email/password, login/signup screen, session persistence, logout
+- **Phase 2**: Chat UI (MessageList, MessageInput, MessageBubble), Supabase Edge Function with Groq API, 25s timeout, retry button on error, auth verification
+
+## What's Remaining
+
+- **Phase 3 (current)**: Create `messages` table, save user/assistant messages, load history on page load
+- **Phase 4**: Create `memory_facts` table, add fact-extraction step in Edge Function, inject facts into system prompt
+- **Phase 5**: Mobile responsive polish, loading skeletons, better empty states, scroll behavior
+- **Phase 6**: Capacitor wrapper for Android APK
 
 ## Development
 
@@ -92,12 +105,12 @@ npm run lint
 
 ## Deployment
 
-- **Vercel**: Auto-deploys on push to `master` via GitHub Actions (`.github/workflows/deploy.yml`)
+- **Vercel**: Auto-deploys on push to `main` via GitHub Actions (`.github/workflows/deploy.yml`)
 - **Environment variables** (set in Vercel dashboard):
   - `VITE_SUPABASE_URL`
   - `VITE_SUPABASE_ANON_KEY`
 - **Edge Function secrets** (set in Supabase dashboard):
-  - `GEMINI_API_KEY`
+  - `GROQ_API_KEY`
 
 ## Keep-Alive
 
@@ -105,10 +118,10 @@ GitHub Actions workflow (`.github/workflows/keepalive.yml`) pings Supabase every
 
 ## Security
 
-- Gemini API key **never** reaches the browser — all AI calls happen server-side in Supabase Edge Functions
+- Groq API key **never** reaches the browser — all AI calls happen server-side in Supabase Edge Functions
 - No runtime settings screen for API keys — credentials baked in at deploy time
 - Row Level Security ensures users only access their own data
 
 ## License
 
-Private / Personal use.# Deploy trigger
+Private / Personal use.
