@@ -13,6 +13,34 @@ export function Chat() {
   const { signOut } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [sending, setSending] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Load conversation history on mount
+  useEffect(() => {
+    loadHistory();
+  }, []);
+
+  const loadHistory = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('chat', {
+        method: 'GET',
+      });
+
+      if (error) throw new Error(error.message);
+
+      const history = data?.messages || [];
+      setMessages(history.map((m: any) => ({
+        id: m.id,
+        role: m.role,
+        content: m.content,
+        createdAt: m.created_at,
+      })));
+    } catch (err) {
+      console.error('Failed to load history:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const sendMessage = useCallback(async (content: string) => {
     if (sending) return;
@@ -94,6 +122,30 @@ export function Chat() {
     window.addEventListener('retry-message', handleRetryEvent as EventListener);
     return () => window.removeEventListener('retry-message', handleRetryEvent as EventListener);
   }, [handleRetry]);
+
+  // Show loading state while history loads
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <header className="border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-10">
+          <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
+            <h1 className="text-xl font-medium text-text">Tipu</h1>
+            <button
+              onClick={() => signOut()}
+              className="px-3 py-1.5 text-sm text-text-muted hover:text-text bg-background-muted rounded-md hover:bg-background border border-border transition-colors"
+            >
+              Sign out
+            </button>
+          </div>
+        </header>
+        <main className="flex-1 max-w-3xl mx-auto w-full flex flex-col">
+          <div className="flex-1 flex items-center justify-center">
+            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
