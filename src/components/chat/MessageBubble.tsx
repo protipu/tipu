@@ -10,25 +10,25 @@ export function MessageBubble({ message }: MessageBubbleProps) {
 
   return (
     <div
-      className={`flex ${isUser ? 'justify-end' : 'justify-start'} animate-fade-in`}
+      className={`flex ${isUser ? 'justify-end' : 'justify-start'} animate-slide-up`}
     >
       <div
-        className={`max-w-[75%] px-4 py-2.5 rounded-2xl ${
+        className={`max-w-[80%] px-4 py-3 rounded-2xl transition-smooth ${
           isUser
-            ? 'bg-primary text-white rounded-br-md'
-            : 'bg-background-muted text-text rounded-bl-md'
-        } ${isError ? 'bg-error-bg text-error border border-error/30' : ''}`}
+            ? 'bg-gradient-to-br from-primary via-primary-hover to-primary-muted text-background rounded-br-lg shadow-warm'
+            : 'bg-surface-gradient text-text rounded-bl-lg border border-border-light shadow-soft'
+        } ${isError ? 'bg-error-bg border-error/40 text-error' : ''}`}
       >
-        <p className="whitespace-pre-wrap text-sm leading-relaxed">{message.content}</p>
+        <p className="whitespace-pre-wrap text-base leading-relaxed">{message.content}</p>
         {message.retrying && (
-          <div className="flex items-center gap-1.5 mt-1.5 text-xs">
-            <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-            <span className="opacity-70">Retrying...</span>
+          <div className="flex items-center gap-2 mt-2 text-sm">
+            <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <span className="text-text-muted">Retrying...</span>
           </div>
         )}
         {message.error && !message.retrying && (
           <button
-            className="mt-1.5 text-xs font-medium text-primary hover:underline"
+            className="mt-2 text-sm font-medium text-primary hover:text-primary-hover transition-smooth"
             onClick={(e) => {
               e.stopPropagation();
               window.dispatchEvent(new CustomEvent('retry-message', { detail: message.id }));
