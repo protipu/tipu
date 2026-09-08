@@ -1,17 +1,15 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';
 
-const ALLOWED_ORIGINS = [
-  'https://tipu-ruddy.vercel.app',
-  'https://tipu.vercel.app',
-  'http://localhost:5173',
-  'http://localhost:4173',
-];
-
 function getCorsHeaders(origin: string | null): Record<string, string> {
-  const allowed = origin && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  const isAllowed = origin && (
+    origin.endsWith('.vercel.app') ||
+    origin.startsWith('http://localhost') ||
+    origin.startsWith('http://127.0.0.1')
+  );
+  const allowedOrigin = isAllowed ? origin : (origin || '*');
   return {
-    'Access-Control-Allow-Origin': allowed,
+    'Access-Control-Allow-Origin': allowedOrigin,
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
     'Access-Control-Allow-Methods': 'POST, OPTIONS, GET, DELETE',
   };
