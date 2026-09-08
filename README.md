@@ -12,7 +12,7 @@ Tipu is a single-user chat interface that:
 ## Tech Stack
 
 - **Frontend**: React 19 + Vite + TypeScript
-- **Styling**: Tailwind CSS v4 (white/bluish minimalist theme)
+- **Styling**: Tailwind CSS v4 (warm cozy home-office theme)
 - **State**: React Context + built-in hooks only
 - **Backend**: Supabase (Postgres, Auth, Edge Functions)
 - **AI**: Groq API (`groq/compound` model) via Supabase Edge Functions
@@ -33,6 +33,15 @@ Tipu is a single-user chat interface that:
                     │  - memory_facts  │
                     └──────────────────┘
 ```
+
+## Theme Architecture
+
+Theme is cleanly separated from component logic:
+- `src/styles/theme.ts` — Single source of truth for design tokens (colors, fonts, shadows, gradients)
+- `src/styles/globals.css` — `@theme` + explicit `:root` CSS variables for Tailwind mapping
+- Components use Tailwind classes (`bg-primary`, `text-text`, `border-border-light`) — no hardcoded colors
+
+To change the theme: edit `theme.ts` → update `globals.css` to match → no component changes needed.
 
 ## Database Schema
 
@@ -78,22 +87,9 @@ create index memory_facts_user_id_idx on memory_facts (user_id);
 | 1 | ✅ | Supabase email/password auth, login screen, session persistence, logout |
 | 2 | ✅ | Core chat loop (UI + Edge Function → Groq API, error/timeout/retry handling) |
 | 3 | ✅ | Persist messages, load conversation history on reload |
-| 4 | 🔄 | Long-term memory (fact extraction + recall) |
-| 5 | ⏳ | Polish: theme, responsive, empty/loading/error states |
-| 6 | ⏳ | Capacitor Android APK (later) |
-
-## What's Done (Phases 0-3)
-
-- **Phase 0**: Scaffold, Vercel deployment pipeline, GitHub Actions CI/CD
-- **Phase 1**: Supabase Auth with email/password, login/signup screen, session persistence, logout
-- **Phase 2**: Chat UI (MessageList, MessageInput, MessageBubble), Supabase Edge Function with Groq API, 25s timeout, retry button on error, auth verification
-- **Phase 3**: `messages` table with RLS, save user/assistant messages, load last 20 messages on page load, include history in Groq context
-
-## What's Remaining
-
-- **Phase 4 (current)**: Create `memory_facts` table, add fact-extraction step in Edge Function, inject facts into system prompt for personalized replies
-- **Phase 5**: Mobile responsive polish, loading skeletons, better empty states, scroll behavior
-- **Phase 6**: Capacitor wrapper for Android APK
+| 4 | ✅ | Long-term memory (fact extraction + recall in system prompt) |
+| 5 | ✅ | Polish: warm cozy theme, gradient backgrounds, glassmorphism, shadows, loading states |
+| 6 | ⏳ | Capacitor Android APK |
 
 ## Development
 
