@@ -10,7 +10,7 @@ if (!SB_KEY) console.error('Missing SUPABASE_SERVICE_ROLE_KEY');
 
 const ok = !!(GROQ_KEY && SB_URL && SB_KEY);
 
-const ALLOW = ['https://tipu.vercel.app', 'http://localhost:5173', 'http://localhost:4173'];
+const ALLOW = ['https://tipu.vercel.app', 'https://tipu-pearl.vercel.app', 'http://localhost:5173', 'http://localhost:4173'];
 
 function hdrs(origin: string | null) {
   const o = origin && ALLOW.includes(origin) ? origin : ALLOW[0];
