@@ -5,9 +5,5 @@ export interface Message {
   createdAt: string;
   error?: boolean;
   retrying?: boolean;
-}
-
-export interface SendMessageResult {
-  message: Message;
-  error?: string;
+  deleting?: boolean;
 }

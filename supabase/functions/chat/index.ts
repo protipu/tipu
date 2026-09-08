@@ -1,24 +1,52 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS, GET',
-};
+const ALLOWED_ORIGINS = [
+  'https://tipu-ruddy.vercel.app',
+  'https://tipu.vercel.app',
+  'http://localhost:5173',
+  'http://localhost:4173',
+];
 
-const GROQ_API_KEY = Deno.env.get('GROQ_API_KEY')!;
+function getCorsHeaders(origin: string | null): Record<string, string> {
+  const allowed = origin && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    'Access-Control-Allow-Origin': allowed,
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS, GET, DELETE',
+  };
+}
+
+const GROQ_API_KEY = Deno.env.get('GROQ_API_KEY');
 const GROQ_MODEL = 'groq/compound';
 
+if (!GROQ_API_KEY) {
+  console.error('FATAL: GROQ_API_KEY environment variable is not set');
+}
+
 serve(async (req: Request) => {
+  const origin = req.headers.get('Origin');
+  const corsHeaders = getCorsHeaders(origin);
+
   console.log('=== Chat function invoked ===', req.method);
 
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
+  if (!GROQ_API_KEY) {
+    return new Response(JSON.stringify({ error: 'Server configuration error' }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
   if (req.method === 'GET') {
     return handleGetHistory(req, corsHeaders);
+  }
+
+  if (req.method === 'DELETE') {
+    return handleDeleteMessage(req, corsHeaders);
   }
 
   if (req.method !== 'POST') {
@@ -31,34 +59,41 @@ serve(async (req: Request) => {
   return handlePostMessage(req, corsHeaders);
 });
 
+async function authenticateUser(req: Request, corsHeaders: Record<string, string>) {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader) {
+    return { supabase: null, user: null, error: new Response(JSON.stringify({ error: 'Missing Authorization header' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })};
+  }
+
+  const token = authHeader.replace('Bearer ', '');
+  const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+  if (authError || !user) {
+    return { supabase: null, user: null, error: new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })};
+  }
+
+  return { supabase, user, error: null };
+}
+
 async function handleGetHistory(req: Request, corsHeaders: Record<string, string>) {
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const { supabase, user, error: authResp } = await authenticateUser(req, corsHeaders);
+    if (authResp) return authResp;
 
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Missing Authorization header' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-
-    if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    const { data: messages, error } = await supabase
+    const { data: messages, error } = await supabase!
       .from('messages')
       .select('id, role, content, created_at')
-      .eq('user_id', user.id)
+      .eq('user_id', user!.id)
       .order('created_at', { ascending: true })
       .limit(20);
 
@@ -77,29 +112,46 @@ async function handleGetHistory(req: Request, corsHeaders: Record<string, string
   }
 }
 
+async function handleDeleteMessage(req: Request, corsHeaders: Record<string, string>) {
+  try {
+    const { supabase, user, error: authResp } = await authenticateUser(req, corsHeaders);
+    if (authResp) return authResp;
+
+    const url = new URL(req.url);
+    const messageId = url.searchParams.get('messageId');
+
+    if (!messageId) {
+      return new Response(JSON.stringify({ error: 'messageId required' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const { error } = await supabase!
+      .from('messages')
+      .delete()
+      .eq('id', messageId)
+      .eq('user_id', user!.id);
+
+    if (error) throw error;
+
+    return new Response(JSON.stringify({ success: true }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Error';
+    console.error('Delete message error:', msg);
+    return new Response(JSON.stringify({ error: msg }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+}
+
 async function handlePostMessage(req: Request, corsHeaders: Record<string, string>) {
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Missing Authorization header' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-
-    if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized', details: authError?.message }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+    const { supabase, user, error: authResp } = await authenticateUser(req, corsHeaders);
+    if (authResp) return authResp;
 
     const body = await req.json();
     const { message } = body;
@@ -112,36 +164,32 @@ async function handlePostMessage(req: Request, corsHeaders: Record<string, strin
       });
     }
 
-    // Load recent conversation history (last 10 messages)
-    const { data: history, error: historyError } = await supabase
+    const { data: history, error: historyError } = await supabase!
       .from('messages')
       .select('role, content')
-      .eq('user_id', user.id)
+      .eq('user_id', user!.id)
       .order('created_at', { ascending: true })
-      .limit(10);
+      .limit(20);
 
     if (historyError) console.error('History load error:', historyError);
 
-    // Load stored facts for this user (last 20 facts)
-    const { data: facts, error: factsError } = await supabase
+    const { data: facts, error: factsError } = await supabase!
       .from('memory_facts')
       .select('fact, category')
-      .eq('user_id', user.id)
+      .eq('user_id', user!.id)
       .order('created_at', { ascending: false })
       .limit(20);
 
     if (factsError) console.error('Facts load error:', factsError);
 
-    // Build system prompt with facts
     const factsText = (facts || []).length > 0
-      ? `\n\nKnown facts about the user:\n${(facts || []).map((f: any) => `- ${f.fact} (${f.category || 'general'})`).join('\n')}`
+      ? `\n\nKnown facts about the user:\n${(facts || []).map((f: { fact: string; category: string | null }) => `- ${f.fact} (${f.category || 'general'})`).join('\n')}`
       : '';
 
     const systemPrompt = `You are Tipu, a personal AI companion. You are warm, friendly, and conversational — like a close friend who remembers things about the user's life. You don't use formal language, you don't lecture, and you don't act like a customer service bot. You're genuinely interested and you remember what the user tells you.${factsText}
 
 Keep responses natural and concise. Don't over-explain. Use casual language.`;
 
-    // Build messages for Groq: system + history + current user message
     const groqMessages = [
       { role: 'system', content: systemPrompt },
       { role: 'assistant', content: 'Got it. I am Tipu — warm, friendly, and I remember. How can I help?' },
@@ -186,29 +234,26 @@ Keep responses natural and concise. Don't over-explain. Use casual language.`;
     const reply = data?.choices?.[0]?.message?.content?.trim() || 'No reply';
     console.log('Reply:', reply.substring(0, 50));
 
-    // Save both messages to database
     const now = new Date().toISOString();
-    const { error: saveError } = await supabase.from('messages').insert([
-      { user_id: user.id, role: 'user', content: message, created_at: now },
-      { user_id: user.id, role: 'assistant', content: reply, created_at: now },
+    const { error: saveError } = await supabase!.from('messages').insert([
+      { user_id: user!.id, role: 'user', content: message, created_at: now },
+      { user_id: user!.id, role: 'assistant', content: reply, created_at: now },
     ]);
 
     if (saveError) console.error('Save messages error:', saveError);
 
-    // Get the user message ID for fact extraction reference
-    const { data: userMsg } = await supabase
+    const { data: userMsg } = await supabase!
       .from('messages')
       .select('id')
-      .eq('user_id', user.id)
+      .eq('user_id', user!.id)
       .eq('role', 'user')
       .eq('content', message)
       .order('created_at', { ascending: false })
       .limit(1)
       .single();
 
-    // Fact extraction (async, non-blocking) - only if we have a user message ID
     if (userMsg?.id) {
-      extractAndSaveFacts(supabase, user.id, userMsg.id, message, reply);
+      extractAndSaveFacts(supabase!, user!.id, userMsg.id, message, reply);
     }
 
     return new Response(JSON.stringify({ reply }), {
@@ -225,6 +270,7 @@ Keep responses natural and concise. Don't over-explain. Use casual language.`;
 }
 
 async function extractAndSaveFacts(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   supabase: any,
   userId: string,
   sourceMessageId: string,
@@ -281,7 +327,7 @@ If no durable fact exists, return: {"fact": null}`;
     
     if (!factText) return;
 
-    let factJson;
+    let factJson: { fact: string | null; category?: string };
     try {
       factJson = JSON.parse(factText);
     } catch {
@@ -294,7 +340,6 @@ If no durable fact exists, return: {"fact": null}`;
       return;
     }
 
-    // Save the fact
     const { error: factError } = await supabase
       .from('memory_facts')
       .insert({

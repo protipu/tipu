@@ -11,12 +11,15 @@ Tipu is a single-user chat interface that:
 
 ## Tech Stack
 
-- **Frontend**: React 19 + Vite + TypeScript
+- **Frontend**: React 19 + Vite + TypeScript (strict mode)
 - **Styling**: Tailwind CSS v4 (warm cozy home-office theme)
 - **State**: React Context + built-in hooks only
 - **Backend**: Supabase (Postgres, Auth, Edge Functions)
 - **AI**: Groq API (`groq/compound` model) via Supabase Edge Functions
 - **Hosting**: Vercel (auto-deploy on push to `main`)
+- **Testing**: Vitest + React Testing Library
+- **Mobile**: Capacitor (Android APK)
+- **Linting**: oxlint (fast Rust-based linter)
 
 ## Architecture
 
@@ -90,6 +93,39 @@ create index memory_facts_user_id_idx on memory_facts (user_id);
 | 4 | ✅ | Long-term memory (fact extraction + recall in system prompt) |
 | 5 | ✅ | Polish: warm cozy theme, gradient backgrounds, glassmorphism, shadows, loading states |
 | 6 | ✅ | Capacitor Android APK |
+| 7 | ✅ | Security hardening, UX improvements, testing, CI/CD |
+
+## What's Implemented
+
+### Security
+- CORS restricted to allowed origins (Vercel domains + localhost)
+- Environment variable validation at Edge Function startup
+- Service role key with manual JWT verification
+
+### UX Improvements
+- **Typing indicator**: Animated dots while assistant responds
+- **Message timestamps**: Each message shows time (e.g., "2:30 PM")
+- **Clear chat**: Trash icon in header to clear all messages
+- **Message delete**: Hover over user messages to reveal delete button
+- **Loading skeleton**: Skeleton placeholders while history loads
+- **Error boundary**: Graceful error handling with retry/reload options
+
+### Code Quality
+- **TypeScript strict mode**: Full type safety
+- **13 unit tests**: ErrorBoundary, MessageBubble, MessageInput components
+- **Vitest**: Fast test runner with React Testing Library
+- **Dead code removed**: Unused `SendMessageResult` type cleaned up
+
+### DevOps
+- **GitHub Actions**: Auto-deploy to Vercel on push to `main`
+- **Edge Function deploy**: Separate workflow for Supabase functions
+- **Keep-alive**: Pings Supabase every 6 hours to prevent free-tier pause
+
+### UI/UX
+- **PWA manifest**: Installable as Progressive Web App
+- **Open Graph tags**: Social sharing previews
+- **Warm favicon**: Gold gradient "T" matching the theme
+- **Viewport fit**: Safe area support for notched devices
 
 ## Development
 
@@ -106,6 +142,12 @@ npm run build
 # Preview production build
 npm run preview
 
+# Run tests
+npm run test
+
+# Run tests in watch mode
+npm run test:watch
+
 # Lint
 npm run lint
 ```
@@ -113,6 +155,7 @@ npm run lint
 ## Deployment
 
 - **Vercel**: Auto-deploys on push to `main` via GitHub Actions (`.github/workflows/deploy.yml`)
+- **Edge Functions**: Deploy via GitHub Actions (`.github/workflows/deploy-functions.yml`)
 - **Environment variables** (set in Vercel dashboard):
   - `VITE_SUPABASE_URL`
   - `VITE_SUPABASE_ANON_KEY`
@@ -143,6 +186,8 @@ GitHub Actions workflow (`.github/workflows/keepalive.yml`) pings Supabase every
 ## Security
 
 - Groq API key **never** reaches the browser — all AI calls happen server-side in Supabase Edge Functions
+- CORS restricted to allowed origins only
+- Environment variables validated at startup
 - No runtime settings screen for API keys — credentials baked in at deploy time
 - Row Level Security ensures users only access their own data
 

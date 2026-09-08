@@ -1,6 +1,7 @@
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Login } from './pages/Login';
 import { Chat } from './pages/Chat';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 function AppContent() {
   const { user, loading } = useAuth();
@@ -21,9 +22,11 @@ function AppContent() {
 
 function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 
