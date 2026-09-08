@@ -14,6 +14,7 @@ const MEMORY_MODEL = Deno.env.get('MEMORY_MODEL') || 'groq/compound';
 const MAX_MESSAGE_LENGTH = 4000;
 const AI_CONTEXT_LIMIT = 5;
 const HISTORY_PAGE_SIZE = 20;
+const FACTS_CONTEXT_LIMIT = 15;
 
 // ── Environment validation ─────────────────────────────────────────────────
 
@@ -36,13 +37,13 @@ function getCorsHeaders(origin: string | null): Record<string, string> {
   return {
     'Access-Control-Allow-Origin': allowed,
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS, GET, DELETE',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS, GET, DELETE, PUT',
   };
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
-function jsonResponse(corsHeaders: Record<string, string>, body: unknown, status = 200) {
+function json(corsHeaders: Record<string, string>, body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -57,20 +58,77 @@ function stripMarkdownFences(text: string): string {
 
 async function authenticateUser(req: Request, corsHeaders: Record<string, string>) {
   const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_KEY!);
-
   const authHeader = req.headers.get('Authorization');
   if (!authHeader) {
-    return { supabase: null, user: null, error: jsonResponse(corsHeaders, { error: 'Missing Authorization header' }, 401) };
+    return { supabase: null, user: null, error: json(corsHeaders, { error: 'Missing Authorization header' }, 401) };
   }
-
   const token = authHeader.replace('Bearer ', '');
   const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-
   if (authError || !user) {
-    return { supabase: null, user: null, error: jsonResponse(corsHeaders, { error: 'Unauthorized' }, 401) };
+    return { supabase: null, user: null, error: json(corsHeaders, { error: 'Unauthorized' }, 401) };
+  }
+  return { supabase, user, error: null };
+}
+
+// ── Memory Helpers ─────────────────────────────────────────────────────────
+
+const CATEGORY_LABELS: Record<string, string> = {
+  personal: 'Personal',
+  preference: 'Preference',
+  work: 'Work',
+  people: 'People',
+  relationship: 'Relationship',
+  goal: 'Goal',
+  project: 'Project',
+  event: 'Event',
+  habit: 'Habit',
+  health: 'Health',
+  general: 'General',
+};
+
+function getCategoryLabel(slug: string): string {
+  return CATEGORY_LABELS[slug] || slug;
+}
+
+async function findSimilarMemory(supabase: unknown, userId: string, newFact: string, category: string) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const s = supabase as any;
+  const { data: existingFacts } = await s
+    .from('memory_facts')
+    .select('id, fact, category, importance, confidence')
+    .eq('user_id', userId)
+    .eq('status', 'active')
+    .eq('category', category)
+    .order('created_at', { ascending: false })
+    .limit(20);
+
+  if (!existingFacts || existingFacts.length === 0) return null;
+
+  // Simple keyword overlap heuristic
+  const newWords = new Set(newFact.toLowerCase().split(/\s+/).filter((w: string) => w.length > 3));
+  let bestMatch = null;
+  let bestScore = 0;
+
+  for (const fact of existingFacts) {
+    const factWords = fact.fact.toLowerCase().split(/\s+/).filter((w: string) => w.length > 3);
+    const overlap = factWords.filter((w: string) => newWords.has(w)).length;
+    const score = overlap / Math.max(newWords.size, factWords.length, 1);
+    if (score > bestScore && score > 0.5) {
+      bestScore = score;
+      bestMatch = fact;
+    }
   }
 
-  return { supabase, user, error: null };
+  return bestMatch;
+}
+
+async function supersedeMemory(supabase: unknown, oldId: string, newId: string) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const s = supabase as any;
+  await s
+    .from('memory_facts')
+    .update({ status: 'superseded', superseded_by: newId })
+    .eq('id', oldId);
 }
 
 // ── Handlers ───────────────────────────────────────────────────────────────
@@ -93,11 +151,11 @@ async function handleGetHistory(req: Request, corsHeaders: Record<string, string
 
     if (error) throw error;
 
-    return jsonResponse(corsHeaders, { messages: messages || [], hasMore: messages?.length === limit });
+    return json(corsHeaders, { messages: messages || [], hasMore: messages?.length === limit });
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Error';
     console.error('Get history error:', msg);
-    return jsonResponse(corsHeaders, { error: msg }, 500);
+    return json(corsHeaders, { error: msg }, 500);
   }
 }
 
@@ -110,7 +168,7 @@ async function handleDeleteMessage(req: Request, corsHeaders: Record<string, str
     const { messageId } = body;
 
     if (!messageId) {
-      return jsonResponse(corsHeaders, { error: 'messageId required' }, 400);
+      return json(corsHeaders, { error: 'messageId required' }, 400);
     }
 
     const { error } = await supabase!
@@ -121,11 +179,121 @@ async function handleDeleteMessage(req: Request, corsHeaders: Record<string, str
 
     if (error) throw error;
 
-    return jsonResponse(corsHeaders, { success: true });
+    return json(corsHeaders, { success: true });
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Error';
     console.error('Delete message error:', msg);
-    return jsonResponse(corsHeaders, { error: msg }, 500);
+    return json(corsHeaders, { error: msg }, 500);
+  }
+}
+
+async function handleGetMemories(req: Request, corsHeaders: Record<string, string>) {
+  try {
+    const { supabase, user, error: authResp } = await authenticateUser(req, corsHeaders);
+    if (authResp) return authResp;
+
+    const url = new URL(req.url);
+    const category = url.searchParams.get('category');
+    const status = url.searchParams.get('status') || 'active';
+    const limit = parseInt(url.searchParams.get('limit') || '100', 10);
+
+    let query = supabase!
+      .from('memory_facts')
+      .select('id, fact, category, importance, confidence, status, source_message_id, superseded_by, created_at, updated_at')
+      .eq('user_id', user!.id)
+      .eq('status', status)
+      .order('importance', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (category) {
+      query = query.eq('category', category);
+    }
+
+    const { data: memories, error } = await query;
+
+    if (error) throw error;
+
+    return json(corsHeaders, { memories: memories || [] });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Error';
+    console.error('Get memories error:', msg);
+    return json(corsHeaders, { error: msg }, 500);
+  }
+}
+
+async function handleUpdateMemory(req: Request, corsHeaders: Record<string, string>) {
+  try {
+    const { supabase, user, error: authResp } = await authenticateUser(req, corsHeaders);
+    if (authResp) return authResp;
+
+    const body = await req.json();
+    const { memoryId, fact, category, importance, confidence, status } = body;
+
+    if (!memoryId) {
+      return json(corsHeaders, { error: 'memoryId required' }, 400);
+    }
+
+    const updates: Record<string, unknown> = {};
+    if (fact !== undefined) updates.fact = fact;
+    if (category !== undefined) updates.category = category;
+    if (importance !== undefined) updates.importance = Math.max(0, Math.min(100, importance));
+    if (confidence !== undefined) updates.confidence = Math.max(0, Math.min(100, confidence));
+    if (status !== undefined) updates.status = status;
+
+    const { data: memory, error } = await supabase!
+      .from('memory_facts')
+      .update(updates)
+      .eq('id', memoryId)
+      .eq('user_id', user!.id)
+      .select('id, fact, category, importance, confidence, status, updated_at')
+      .single();
+
+    if (error) throw error;
+
+    return json(corsHeaders, { memory });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Error';
+    console.error('Update memory error:', msg);
+    return json(corsHeaders, { error: msg }, 500);
+  }
+}
+
+async function handleDeleteMemory(req: Request, corsHeaders: Record<string, string>) {
+  try {
+    const { supabase, user, error: authResp } = await authenticateUser(req, corsHeaders);
+    if (authResp) return authResp;
+
+    const body = await req.json();
+    const { memoryId, archive } = body;
+
+    if (!memoryId) {
+      return json(corsHeaders, { error: 'memoryId required' }, 400);
+    }
+
+    if (archive) {
+      const { error } = await supabase!
+        .from('memory_facts')
+        .update({ status: 'archived' })
+        .eq('id', memoryId)
+        .eq('user_id', user!.id);
+
+      if (error) throw error;
+    } else {
+      const { error } = await supabase!
+        .from('memory_facts')
+        .delete()
+        .eq('id', memoryId)
+        .eq('user_id', user!.id);
+
+      if (error) throw error;
+    }
+
+    return json(corsHeaders, { success: true });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Error';
+    console.error('Delete memory error:', msg);
+    return json(corsHeaders, { error: msg }, 500);
   }
 }
 
@@ -138,43 +306,44 @@ async function handlePostMessage(req: Request, corsHeaders: Record<string, strin
     const { message } = body;
 
     if (!message?.trim()) {
-      return jsonResponse(corsHeaders, { error: 'Message required' }, 400);
+      return json(corsHeaders, { error: 'Message required' }, 400);
     }
 
     if (message.length > MAX_MESSAGE_LENGTH) {
-      return jsonResponse(corsHeaders, { error: `Message too long (max ${MAX_MESSAGE_LENGTH} characters)` }, 400);
+      return json(corsHeaders, { error: `Message too long (max ${MAX_MESSAGE_LENGTH} characters)` }, 400);
     }
 
     // Load last 5 messages for AI context (SHORT-TERM MEMORY)
-    const { data: history, error: historyError } = await supabase!
+    const { data: history } = await supabase!
       .from('messages')
       .select('role, content')
       .eq('user_id', user!.id)
       .order('created_at', { ascending: false })
       .limit(AI_CONTEXT_LIMIT);
 
-    if (historyError) console.error('History load error:', historyError);
-
-    // Load relevant memories (LONG-TERM MEMORY)
-    const { data: facts, error: factsError } = await supabase!
+    // Load relevant memories (LONG-TERM MEMORY) — top by importance
+    const { data: facts } = await supabase!
       .from('memory_facts')
-      .select('fact, category')
+      .select('fact, category, importance')
       .eq('user_id', user!.id)
       .eq('status', 'active')
+      .order('importance', { ascending: false })
       .order('created_at', { ascending: false })
-      .limit(20);
-
-    if (factsError) console.error('Facts load error:', factsError);
+      .limit(FACTS_CONTEXT_LIMIT);
 
     const factsText = (facts || []).length > 0
-      ? `\n\nKnown facts about the user:\n${(facts || []).map((f: { fact: string; category: string | null }) => `- ${f.fact} (${f.category || 'general'})`).join('\n')}`
+      ? `\n\nKnown facts about the user:\n${(facts || []).map((f: { fact: string; category: string; importance: number }) => `- [${f.category || 'general'}] ${f.fact} (importance: ${f.importance || 50})`).join('\n')}`
       : '';
 
-    const systemPrompt = `You are Tipu, a personal AI companion. You are warm, friendly, and conversational — like a close friend who remembers things about the user's life. You don't use formal language, you don't lecture, and you don't act like a customer service bot. You're genuinely interested and you remember what the user tells you.${factsText}
+    const systemPrompt = `You are Tipu, a personal AI companion. You are warm, friendly, and conversational — like a close friend who remembers things about the user's life. You don't use formal language, you don't lecture, and you don't act like a customer service bot. You're genuinely interested and you remember what the user tells you.
 
-Keep responses natural and concise. Don't over-explain. Use casual language.`;
+IMPORTANT RULES:
+- Keep responses natural and concise (2-3 sentences max unless asked for detail)
+- Don't over-explain or lecture
+- Use casual, warm language
+- If you learn something new about the user, acknowledge it briefly
+- Never say "I don't have access to..." or similar — just use what you know${factsText}`;
 
-    // Build messages: system + reversed history (oldest first) + current message
     const groqMessages = [
       { role: 'system', content: systemPrompt },
       ...(history || []).reverse().map(m => ({ role: m.role, content: m.content })),
@@ -218,7 +387,7 @@ Keep responses natural and concise. Don't over-explain. Use casual language.`;
     const reply = data?.choices?.[0]?.message?.content?.trim() || 'No reply';
     console.log('Reply:', reply.substring(0, 50));
 
-    // Save messages with distinct timestamps for deterministic ordering
+    // Save messages with distinct timestamps
     const userTime = new Date().toISOString();
     const assistantTime = new Date(Date.now() + 1000).toISOString();
 
@@ -232,18 +401,18 @@ Keep responses natural and concise. Don't over-explain. Use casual language.`;
 
     if (saveError) console.error('Save messages error:', saveError);
 
-    // Use the actual inserted user message ID for fact extraction
+    // Extract and save facts with deduplication
     const userMsgId = insertedMessages?.find((m: { id: string; role: string }) => m.role === 'user')?.id;
 
     if (userMsgId) {
       extractAndSaveFacts(supabase!, user!.id, userMsgId, message, reply);
     }
 
-    return jsonResponse(corsHeaders, { reply });
+    return json(corsHeaders, { reply });
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Error';
     console.error('Function error:', msg);
-    return jsonResponse(corsHeaders, { error: msg }, 500);
+    return json(corsHeaders, { error: msg }, 500);
   }
 }
 
@@ -260,15 +429,24 @@ async function extractAndSaveFacts(
   try {
     console.log('Extracting facts from exchange...');
 
-    const factPrompt = `Given this conversation exchange, extract ONE durable fact about the user that would be useful to remember long-term.
+    const factPrompt = `Given this conversation exchange, extract durable facts about the user.
 
 User: ${userMessage}
 Assistant: ${assistantReply}
 
-If there's a clear fact about the user's life (preferences, habits, events, relationships, work, health, etc.), return it as a JSON object:
-{"fact": "short factual statement", "category": "personal|preference|work|people|relationship|goal|project|event|habit|general"}
+Return a JSON array of facts (0-3 facts). Each fact should have:
+- "fact": short factual statement about the user (max 200 chars)
+- "category": one of: personal, preference, work, people, relationship, goal, project, event, habit, health
+- "importance": 1-100 (how important is this to know about the user)
+- "confidence": 1-100 (how sure are you this is a durable fact vs one-time statement)
 
-If no durable fact exists, return: {"fact": null}`;
+Only include facts that are:
+1. Durable (will be true tomorrow, not just today)
+2. Specific to the user (not general knowledge)
+3. Not already obvious from context
+
+Return ONLY valid JSON array, no markdown fences.
+Example: [{"fact":"User works at Google","category":"work","importance":80,"confidence":90}]`;
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000);
@@ -284,10 +462,10 @@ If no durable fact exists, return: {"fact": null}`;
         body: JSON.stringify({
           model: MEMORY_MODEL,
           messages: [
-            { role: 'system', content: 'You extract durable facts from conversations. Return only valid JSON.' },
+            { role: 'system', content: 'You extract durable facts from conversations. Return only valid JSON arrays.' },
             { role: 'user', content: factPrompt },
           ],
-          max_tokens: 200,
+          max_tokens: 500,
           temperature: 0.3,
           top_p: 0.9,
         }),
@@ -307,43 +485,76 @@ If no durable fact exists, return: {"fact": null}`;
 
     if (!factText) return;
 
-    // Strip markdown fences before parsing
     const cleanJson = stripMarkdownFences(factText);
 
-    let factJson: { fact: string | null; category?: string };
+    let facts: Array<{ fact: string; category: string; importance: number; confidence: number }>;
     try {
-      factJson = JSON.parse(cleanJson);
+      const parsed = JSON.parse(cleanJson);
+      facts = Array.isArray(parsed) ? parsed : [parsed];
     } catch {
       console.error('Failed to parse fact JSON:', cleanJson);
       return;
     }
 
-    if (!factJson.fact) {
-      console.log('No fact extracted');
-      return;
-    }
+    for (const fact of facts) {
+      if (!fact.fact || fact.fact.length < 5) continue;
 
-    const { error: factError } = await supabase
-      .from('memory_facts')
-      .insert({
-        user_id: userId,
-        fact: factJson.fact,
-        category: factJson.category || 'general',
-        source_message_id: sourceMessageId,
-        status: 'active',
-      });
+      const category = fact.category || 'general';
+      const importance = Math.max(1, Math.min(100, fact.importance || 50));
+      const confidence = Math.max(1, Math.min(100, fact.confidence || 80));
 
-    if (factError) {
-      console.error('Save fact error:', factError);
-    } else {
-      console.log('Fact saved:', factJson.fact, '| category:', factJson.category);
+      // Skip low-confidence facts
+      if (confidence < 50) {
+        console.log('Skipping low-confidence fact:', fact.fact);
+        continue;
+      }
+
+      // Check for similar existing memory
+      const similar = await findSimilarMemory(supabase, userId, fact.fact, category);
+
+      if (similar) {
+        // Update existing memory with new importance if higher
+        if (importance > similar.importance) {
+          await supabase
+            .from('memory_facts')
+            .update({
+              fact: fact.fact,
+              importance,
+              confidence,
+              source_message_id: sourceMessageId,
+            })
+            .eq('id', similar.id);
+          console.log('Updated existing memory:', similar.id, '→', fact.fact);
+        } else {
+          console.log('Skipped duplicate:', fact.fact);
+        }
+      } else {
+        // Insert new memory
+        const { error: factError } = await supabase
+          .from('memory_facts')
+          .insert({
+            user_id: userId,
+            fact: fact.fact,
+            category,
+            importance,
+            confidence,
+            source_message_id: sourceMessageId,
+            status: 'active',
+          });
+
+        if (factError) {
+          console.error('Save fact error:', factError);
+        } else {
+          console.log('New memory saved:', fact.fact, '|', category, '|', importance);
+        }
+      }
     }
   } catch (err) {
     console.error('Fact extraction error:', err);
   }
 }
 
-// ── Main ───────────────────────────────────────────────────────────────────
+// ── Router ─────────────────────────────────────────────────────────────────
 
 serve(async (req: Request) => {
   const origin = req.headers.get('Origin');
@@ -354,20 +565,40 @@ serve(async (req: Request) => {
   }
 
   if (!configOk) {
-    return jsonResponse(corsHeaders, { error: 'Server configuration error' }, 500);
+    return json(corsHeaders, { error: 'Server configuration error' }, 500);
   }
 
-  if (req.method === 'GET') {
+  const url = new URL(req.url);
+  const path = url.pathname.split('/').pop() || '';
+
+  // Route: GET /chat → message history
+  if (req.method === 'GET' && (path === 'chat' || path === '')) {
     return handleGetHistory(req, corsHeaders);
   }
 
+  // Route: GET /chat?section=memories → all memories
+  if (req.method === 'GET' && url.searchParams.get('section') === 'memories') {
+    return handleGetMemories(req, corsHeaders);
+  }
+
+  // Route: DELETE /chat → delete message
   if (req.method === 'DELETE') {
     return handleDeleteMessage(req, corsHeaders);
   }
 
-  if (req.method !== 'POST') {
-    return jsonResponse(corsHeaders, { error: 'Method not allowed' }, 405);
+  // Route: PUT /chat → update memory
+  if (req.method === 'PUT') {
+    return handleUpdateMemory(req, corsHeaders);
   }
 
-  return handlePostMessage(req, corsHeaders);
+  // Route: POST with archive/delete action → delete/archive memory
+  if (req.method === 'POST') {
+    const body = await req.clone().json().catch(() => ({}));
+    if (body.memoryId && (body.archive !== undefined || body.action === 'delete')) {
+      return handleDeleteMemory(req, corsHeaders);
+    }
+    return handlePostMessage(req, corsHeaders);
+  }
+
+  return json(corsHeaders, { error: 'Method not allowed' }, 405);
 });

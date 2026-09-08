@@ -8,11 +8,13 @@ Tipu is a single-user chat interface that:
 - Converses naturally like a friend
 - Quietly extracts and stores long-term facts about the user's life
 - Uses stored context to give increasingly personal, relevant replies over time
+- Remembers with categories, importance levels, and confidence scores
+- Deduplicates and supersedes outdated memories automatically
 
 ## Tech Stack
 
 - **Frontend**: React 19 + Vite + TypeScript (strict mode)
-- **Styling**: Tailwind CSS v4 (warm cozy home-office theme)
+- **Styling**: Tailwind CSS v4 (blue/white modern theme with robot mascot)
 - **State**: React Context + built-in hooks only
 - **Backend**: Supabase (Postgres, Auth, Edge Functions)
 - **AI**: Groq API (`groq/compound` model) via Supabase Edge Functions
@@ -37,15 +39,6 @@ Tipu is a single-user chat interface that:
                     └──────────────────┘
 ```
 
-## Theme Architecture
-
-Theme is cleanly separated from component logic:
-- `src/styles/theme.ts` — Single source of truth for design tokens (colors, fonts, shadows, gradients)
-- `src/styles/globals.css` — `@theme` + explicit `:root` CSS variables for Tailwind mapping
-- Components use Tailwind classes (`bg-primary`, `text-text`, `border-border-light`) — no hardcoded colors
-
-To change the theme: edit `theme.ts` → update `globals.css` to match → no component changes needed.
-
 ## Database Schema
 
 ```sql
@@ -58,28 +51,27 @@ create table messages (
   created_at timestamptz not null default now()
 );
 
--- memory_facts: extracted long-term facts about the user
+-- memory_facts: enhanced long-term memory (Memory 2.0)
 create table memory_facts (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users not null,
   fact text not null,
-  category text, -- e.g. 'work', 'health', 'people', 'preference', 'event'
-  source_message_id uuid references messages(id),
-  created_at timestamptz not null default now()
+  category text default 'general',       -- personal, preference, work, people, etc.
+  importance smallint default 50,         -- 1-100: how important to know
+  confidence smallint default 80,         -- 1-100: how sure is the AI
+  status text default 'active' check (status in ('active', 'archived', 'superseded')),
+  source_message_id uuid references messages(id) on delete set null,
+  superseded_by uuid references memory_facts(id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  check (importance >= 0 and importance <= 100),
+  check (confidence >= 0 and confidence <= 100)
 );
 
--- Row Level Security on both tables
-alter table messages enable row level security;
-alter table memory_facts enable row level security;
-
-create policy "Users can access own messages" on messages
-  for all using (auth.uid() = user_id);
-
-create policy "Users can access own memory facts" on memory_facts
-  for all using (auth.uid() = user_id);
-
-create index messages_user_id_created_at_idx on messages (user_id, created_at);
-create index memory_facts_user_id_idx on memory_facts (user_id);
+-- Indexes for performance
+create index idx_memory_facts_user_status on memory_facts(user_id, status);
+create index idx_memory_facts_user_category on memory_facts(user_id, category);
+create index idx_memory_facts_importance on memory_facts(importance desc);
 ```
 
 ## Build Phases
@@ -91,30 +83,45 @@ create index memory_facts_user_id_idx on memory_facts (user_id);
 | 2 | ✅ | Core chat loop (UI + Edge Function → Groq API, error/timeout/retry handling) |
 | 3 | ✅ | Persist messages, load conversation history on reload |
 | 4 | ✅ | Long-term memory (fact extraction + recall in system prompt) |
-| 5 | ✅ | Polish: warm cozy theme, gradient backgrounds, glassmorphism, shadows, loading states |
+| 5 | ✅ | UI polish — blue/white modern theme with robot mascot |
 | 6 | ✅ | Capacitor Android APK |
 | 7 | ✅ | Security hardening, UX improvements, testing, CI/CD |
+| Phase 2 | ✅ | Foundation fixes — delete, CORS, timestamps, pagination, dead code |
+| Phase 3 | ✅ | **Memory 2.0** — enhanced memory with categories, importance, confidence, dedup |
 
 ## What's Implemented
 
+### Memory 2.0
+- **10 categories**: Personal, Preference, Work, People, Relationship, Goal, Project, Event, Habit, Health
+- **Importance scoring**: 1-100 scale, memories sorted by importance
+- **Confidence scoring**: 1-100 scale, low-confidence facts skipped
+- **Status system**: Active, Archived, Superseded
+- **Deduplication**: Similar memories detected and merged
+- **Superseding**: Outdated memories replaced with updated versions
+- **Memory UI**: Full-featured memory page with category filters, edit, delete, archive
+- **Auto-extraction**: AI extracts 0-3 facts per conversation turn
+- **Rich system prompt**: AI receives top memories by importance with category context
+
 ### Security
-- CORS restricted to allowed origins (Vercel domains + localhost)
+- CORS restricted to `tipu.vercel.app` + localhost (explicit allowlist)
 - Environment variable validation at Edge Function startup
 - Service role key with manual JWT verification
+- Input validation (max 4000 chars per message)
 
 ### UX Improvements
 - **Typing indicator**: Animated dots while assistant responds
-- **Message timestamps**: Each message shows time (e.g., "2:30 PM")
-- **Clear chat**: Trash icon in header to clear all messages
-- **Message delete**: Hover over user messages to reveal delete button
+- **Message timestamps**: Each message shows time
+- **Delete messages**: Hover to reveal delete button
+- **Message history**: Load older messages with pagination
 - **Loading skeleton**: Skeleton placeholders while history loads
 - **Error boundary**: Graceful error handling with retry/reload options
+- **Memory page**: Browse, filter, edit, delete, archive memories
+- **Category filters**: Quick filter by memory category with counts
 
 ### Code Quality
 - **TypeScript strict mode**: Full type safety
 - **13 unit tests**: ErrorBoundary, MessageBubble, MessageInput components
 - **Vitest**: Fast test runner with React Testing Library
-- **Dead code removed**: Unused `SendMessageResult` type cleaned up
 
 ### DevOps
 - **GitHub Actions**: Auto-deploy to Vercel on push to `main`
@@ -122,10 +129,11 @@ create index memory_facts_user_id_idx on memory_facts (user_id);
 - **Keep-alive**: Pings Supabase every 6 hours to prevent free-tier pause
 
 ### UI/UX
+- **Blue/white modern theme**: Clean, professional design
+- **Robot mascot**: Custom SVG mascot (`public/mascot.svg`)
+- **Bottom navigation**: Message, Memory, Settings tabs
 - **PWA manifest**: Installable as Progressive Web App
 - **Open Graph tags**: Social sharing previews
-- **Warm favicon**: Gold gradient "T" matching the theme
-- **Viewport fit**: Safe area support for notched devices
 
 ## Development
 
@@ -161,6 +169,8 @@ npm run lint
   - `VITE_SUPABASE_ANON_KEY`
 - **Edge Function secrets** (set in Supabase dashboard):
   - `GROQ_API_KEY`
+  - `SUPABASE_SERVICE_ROLE_KEY`
+  - `SUPABASE_URL`
 
 ## Android APK Build
 
@@ -179,17 +189,14 @@ cd android && ./gradlew assembleDebug
 # APK output: android/app/build/outputs/apk/debug/app-debug.apk
 ```
 
-## Keep-Alive
-
-GitHub Actions workflow (`.github/workflows/keepalive.yml`) pings Supabase every 6 hours to prevent free-tier auto-pause.
-
 ## Security
 
 - Groq API key **never** reaches the browser — all AI calls happen server-side in Supabase Edge Functions
-- CORS restricted to allowed origins only
+- CORS restricted to explicit allowlist only
 - Environment variables validated at startup
 - No runtime settings screen for API keys — credentials baked in at deploy time
 - Row Level Security ensures users only access their own data
+- Foreign key cascade protection on memory deletions
 
 ## License
 
