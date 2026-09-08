@@ -18,12 +18,14 @@ export function Chat() {
   const [loading, setLoading] = useState(true);
   const [isTyping, setIsTyping] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('chat');
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   useEffect(() => {
     loadHistory();
   }, []);
 
-  const loadHistory = async () => {
+  const loadHistory = async (offset = 0) => {
     try {
       const { data, error } = await supabase.functions.invoke('chat', {
         method: 'GET',
@@ -32,18 +34,33 @@ export function Chat() {
       if (error) throw new Error(error.message);
 
       const history = data?.messages || [];
-      setMessages(history.map((m: { id: string; role: string; content: string; created_at: string }) => ({
+      setHasMore(data?.hasMore || false);
+
+      const mapped = history.map((m: { id: string; role: string; content: string; created_at: string }) => ({
         id: m.id,
         role: m.role as 'user' | 'assistant',
         content: m.content,
         createdAt: m.created_at,
-      })).reverse());
+      })).reverse();
+
+      if (offset === 0) {
+        setMessages(mapped);
+      } else {
+        setMessages((prev) => [...mapped, ...prev]);
+      }
     } catch (err) {
       console.error('Failed to load history:', err);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
+
+  const loadOlder = useCallback(async () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    await loadHistory(messages.length);
+  }, [loadingMore, hasMore, messages.length]);
 
   const sendMessage = useCallback(async (content: string) => {
     if (sending) return;
@@ -199,6 +216,9 @@ export function Chat() {
               messages={messages}
               isTyping={isTyping}
               onDelete={handleDelete}
+              hasMore={hasMore}
+              loadingMore={loadingMore}
+              onLoadMore={loadOlder}
             />
             <MessageInput
               onSend={sendMessage}
