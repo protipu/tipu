@@ -1,4 +1,3 @@
-import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';
 
 const GROQ_KEY = Deno.env.get('GROQ_API_KEY');
@@ -15,34 +14,39 @@ const ALLOW = ['https://tipu.vercel.app', 'http://localhost:5173', 'http://local
 
 function hdrs(origin: string | null) {
   const o = origin && ALLOW.includes(origin) ? origin : ALLOW[0];
-  return { 'Access-Control-Allow-Origin': o, 'Access-Control-Allow-Headers': 'authorization,x-client-info,apikey,content-type', 'Access-Control-Allow-Methods': 'POST,OPTIONS,GET,DELETE,PUT' };
+  return {
+    'Access-Control-Allow-Origin': o,
+    'Access-Control-Allow-Headers': 'authorization,x-client-info,apikey,content-type',
+    'Access-Control-Allow-Methods': 'POST,OPTIONS,GET,DELETE,PUT',
+  };
 }
 
 function j(h: Record<string, string>, b: unknown, s = 200) {
   return new Response(JSON.stringify(b), { status: s, headers: { ...h, 'Content-Type': 'application/json' } });
 }
 
-serve(async (req) => {
+function stripFences(t: string) { return t.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim(); }
+
+async function auth(req: Request, h: Record<string, string>) {
+  const sb = createClient(SB_URL!, SB_KEY!);
+  const a = req.headers.get('Authorization');
+  if (!a) return { sb, user: null, err: j(h, { error: 'No auth' }, 401) };
+  const { data: { user }, error } = await sb.auth.getUser(a.replace('Bearer ', ''));
+  if (error || !user) return { sb, user: null, err: j(h, { error: 'Unauthorized' }, 401) };
+  return { sb, user, err: null };
+}
+
+Deno.serve(async (req) => {
   const h = hdrs(req.headers.get('Origin'));
   if (req.method === 'OPTIONS') return new Response('ok', { headers: h });
-  if (!ok) return j(h, { error: 'Server config error' }, 500);
+  if (!ok) return j(h, { error: 'Config error' }, 500);
 
   try {
     const url = new URL(req.url);
 
-    // Auth helper
-    const doAuth = async () => {
-      const sb = createClient(SB_URL!, SB_KEY!);
-      const a = req.headers.get('Authorization');
-      if (!a) return { sb, user: null, err: j(h, { error: 'No auth' }, 401) };
-      const { data: { user }, error } = await sb.auth.getUser(a.replace('Bearer ', ''));
-      if (error || !user) return { sb, user: null, err: j(h, { error: 'Unauthorized' }, 401) };
-      return { sb, user, err: null };
-    };
-
-    // ── GET ──────────────────────────────────────────────────────────
+    // ── GET ──────────────────────────────────────────────────────
     if (req.method === 'GET') {
-      const { sb, user, err } = await doAuth();
+      const { sb, user, err } = await auth(req, h);
       if (err) return err;
       const section = url.searchParams.get('section');
 
@@ -58,7 +62,6 @@ serve(async (req) => {
         return j(h, { memories: data || [] });
       }
 
-      // History
       const off = parseInt(url.searchParams.get('offset') || '0', 10);
       const lim = parseInt(url.searchParams.get('limit') || '20', 10);
       const { data, error } = await sb.from('messages')
@@ -70,14 +73,14 @@ serve(async (req) => {
       return j(h, { messages: data || [], hasMore: (data?.length || 0) === lim });
     }
 
-    // ── Read body for POST/PUT/DELETE ────────────────────────────────
+    // ── Read body ────────────────────────────────────────────────
     let body: Record<string, unknown> = {};
-    try { body = await req.json(); } catch { /* empty */ }
+    try { body = await req.json(); } catch { /* no body */ }
 
-    const { sb, user, err } = await doAuth();
+    const { sb, user, err } = await auth(req, h);
     if (err) return err;
 
-    // ── PUT: update memory ──────────────────────────────────────────
+    // ── PUT: update memory ──────────────────────────────────────
     if (req.method === 'PUT' && body.memoryId) {
       const u: Record<string, unknown> = {};
       if (body.fact !== undefined) u.fact = body.fact;
@@ -90,7 +93,7 @@ serve(async (req) => {
       return j(h, { memory: data });
     }
 
-    // ── DELETE: message or memory ───────────────────────────────────
+    // ── DELETE ───────────────────────────────────────────────────
     if (req.method === 'DELETE') {
       if (body.memoryId) {
         const { error } = body.archive
@@ -107,17 +110,15 @@ serve(async (req) => {
       return j(h, { error: 'messageId or memoryId required' }, 400);
     }
 
-    // ── POST: chat message ──────────────────────────────────────────
+    // ── POST: chat ──────────────────────────────────────────────
     if (req.method === 'POST') {
       const message = (body.message as string) || '';
       if (!message.trim()) return j(h, { error: 'Empty message' }, 400);
 
-      // Last 5 messages for context
       const { data: hist } = await sb.from('messages')
         .select('role, content').eq('user_id', user!.id)
         .order('created_at', { ascending: false }).limit(5);
 
-      // Active memories by importance
       const { data: mems } = await sb.from('memory_facts')
         .select('fact, category, importance').eq('user_id', user!.id).eq('status', 'active')
         .order('importance', { ascending: false }).limit(15);

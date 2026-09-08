@@ -23,22 +23,19 @@ export function MessageBubble({ message, onDelete }: MessageBubbleProps) {
     >
       <div className="max-w-[80%] relative">
         {!isUser && (
-          <div className="flex items-start gap-2 mb-1">
-            <img src="/mascot.svg" alt="Tipu" className="w-6 h-6 mt-1 flex-shrink-0" />
-            <div
-              className={`px-4 py-3 rounded-2xl rounded-tl-md shadow-soft border border-border ${
-                isError ? 'bg-error-bg border-error/20 text-error' : 'bg-white text-text'
-              } ${message.deleting ? 'opacity-50' : ''}`}
-            >
-              {message.retrying ? (
-                <div className="flex items-center gap-2 text-sm">
-                  <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                  <span className="text-text-muted">Retrying...</span>
-                </div>
-              ) : (
-                <p className="whitespace-pre-wrap text-sm leading-relaxed">{message.content}</p>
-              )}
-            </div>
+          <div
+            className={`px-4 py-3 rounded-2xl rounded-tl-md shadow-soft border border-border ${
+              isError ? 'bg-error-bg border-error/20 text-error' : 'bg-white text-text'
+            } ${message.deleting ? 'opacity-50' : ''}`}
+          >
+            {message.retrying ? (
+              <div className="flex items-center gap-2 text-sm">
+                <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                <span className="text-text-muted">Retrying...</span>
+              </div>
+            ) : (
+              <p className="whitespace-pre-wrap text-sm leading-relaxed">{message.content}</p>
+            )}
           </div>
         )}
 
