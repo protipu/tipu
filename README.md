@@ -107,6 +107,7 @@ create index idx_memory_facts_importance on memory_facts(importance desc);
 - Environment variable validation at Edge Function startup
 - Service role key with manual JWT verification
 - Input validation (max 4000 chars per message)
+- Edge Function uses `Deno.serve()` (compatible with latest Supabase Edge Runtime)
 
 ### UX Improvements
 - **Typing indicator**: Animated dots while assistant responds
@@ -121,7 +122,7 @@ create index idx_memory_facts_importance on memory_facts(importance desc);
 ### Code Quality
 - **TypeScript strict mode**: Full type safety
 - **13 unit tests**: ErrorBoundary, MessageBubble, MessageInput components
-- **Vitest**: Fast test runner with React Testing Library
+- **Vitest**: Fast test runner with React Testing Library (automatic JSX runtime)
 
 ### DevOps
 - **GitHub Actions**: Auto-deploy to Vercel on push to `main`
