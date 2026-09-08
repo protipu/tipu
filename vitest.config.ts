@@ -9,4 +9,14 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.ts'],
     css: true,
   },
+  esbuild: {
+    jsx: 'automatic',
+    jsxImportSource: 'react',
+  },
+  resolve: {
+    alias: {
+      'react': 'react',
+      'react-dom': 'react-dom',
+    },
+  },
 });
