@@ -70,67 +70,6 @@ async function authenticateUser(req: Request, corsHeaders: Record<string, string
   return { supabase, user, error: null };
 }
 
-// ── Memory Helpers ─────────────────────────────────────────────────────────
-
-const CATEGORY_LABELS: Record<string, string> = {
-  personal: 'Personal',
-  preference: 'Preference',
-  work: 'Work',
-  people: 'People',
-  relationship: 'Relationship',
-  goal: 'Goal',
-  project: 'Project',
-  event: 'Event',
-  habit: 'Habit',
-  health: 'Health',
-  general: 'General',
-};
-
-function getCategoryLabel(slug: string): string {
-  return CATEGORY_LABELS[slug] || slug;
-}
-
-async function findSimilarMemory(supabase: unknown, userId: string, newFact: string, category: string) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const s = supabase as any;
-  const { data: existingFacts } = await s
-    .from('memory_facts')
-    .select('id, fact, category, importance, confidence')
-    .eq('user_id', userId)
-    .eq('status', 'active')
-    .eq('category', category)
-    .order('created_at', { ascending: false })
-    .limit(20);
-
-  if (!existingFacts || existingFacts.length === 0) return null;
-
-  // Simple keyword overlap heuristic
-  const newWords = new Set(newFact.toLowerCase().split(/\s+/).filter((w: string) => w.length > 3));
-  let bestMatch = null;
-  let bestScore = 0;
-
-  for (const fact of existingFacts) {
-    const factWords = fact.fact.toLowerCase().split(/\s+/).filter((w: string) => w.length > 3);
-    const overlap = factWords.filter((w: string) => newWords.has(w)).length;
-    const score = overlap / Math.max(newWords.size, factWords.length, 1);
-    if (score > bestScore && score > 0.5) {
-      bestScore = score;
-      bestMatch = fact;
-    }
-  }
-
-  return bestMatch;
-}
-
-async function supersedeMemory(supabase: unknown, oldId: string, newId: string) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const s = supabase as any;
-  await s
-    .from('memory_facts')
-    .update({ status: 'superseded', superseded_by: newId })
-    .eq('id', oldId);
-}
-
 // ── Handlers ───────────────────────────────────────────────────────────────
 
 async function handleGetHistory(req: Request, corsHeaders: Record<string, string>) {
@@ -313,7 +252,7 @@ async function handlePostMessage(req: Request, corsHeaders: Record<string, strin
       return json(corsHeaders, { error: `Message too long (max ${MAX_MESSAGE_LENGTH} characters)` }, 400);
     }
 
-    // Load last 5 messages for AI context (SHORT-TERM MEMORY)
+    // Load last 5 messages for AI context
     const { data: history } = await supabase!
       .from('messages')
       .select('role, content')
@@ -321,7 +260,7 @@ async function handlePostMessage(req: Request, corsHeaders: Record<string, strin
       .order('created_at', { ascending: false })
       .limit(AI_CONTEXT_LIMIT);
 
-    // Load relevant memories (LONG-TERM MEMORY) — top by importance
+    // Load relevant memories sorted by importance
     const { data: facts } = await supabase!
       .from('memory_facts')
       .select('fact, category, importance')
@@ -419,8 +358,7 @@ IMPORTANT RULES:
 // ── Fact Extraction ────────────────────────────────────────────────────────
 
 async function extractAndSaveFacts(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  supabase: any,
+  supabase: Record<string, unknown>,
   userId: string,
   sourceMessageId: string,
   userMessage: string,
@@ -503,35 +441,53 @@ Example: [{"fact":"User works at Google","category":"work","importance":80,"conf
       const importance = Math.max(1, Math.min(100, fact.importance || 50));
       const confidence = Math.max(1, Math.min(100, fact.confidence || 80));
 
-      // Skip low-confidence facts
       if (confidence < 50) {
         console.log('Skipping low-confidence fact:', fact.fact);
         continue;
       }
 
       // Check for similar existing memory
-      const similar = await findSimilarMemory(supabase, userId, fact.fact, category);
+      const { data: existingFacts } = await (supabase as { from: (table: string) => { select: (cols: string) => { eq: (col: string, val: string) => { eq: (col: string, val: string) => { eq: (col: string, val: string) => { order: (col: string, opts: { ascending: boolean }) => { limit: (n: number) => Promise<{ data: Array<{ id: string; fact: string; category: string; importance: number; confidence: number }> | null }> } } } } } } }).from('memory_facts')
+        .select('id, fact, category, importance, confidence')
+        .eq('user_id', userId)
+        .eq('status', 'active')
+        .eq('category', category)
+        .order('created_at', { ascending: false })
+        .limit(20);
 
-      if (similar) {
-        // Update existing memory with new importance if higher
-        if (importance > similar.importance) {
-          await supabase
-            .from('memory_facts')
+      let bestMatch: { id: string; fact: string; importance: number } | null = null;
+
+      if (existingFacts && existingFacts.length > 0) {
+        const newWords = new Set(fact.fact.toLowerCase().split(/\s+/).filter((w: string) => w.length > 3));
+        let bestScore = 0;
+
+        for (const existing of existingFacts) {
+          const factWords = existing.fact.toLowerCase().split(/\s+/).filter((w: string) => w.length > 3);
+          const overlap = factWords.filter((w: string) => newWords.has(w)).length;
+          const score = overlap / Math.max(newWords.size, factWords.length, 1);
+          if (score > bestScore && score > 0.5) {
+            bestScore = score;
+            bestMatch = existing;
+          }
+        }
+      }
+
+      if (bestMatch) {
+        if (importance > bestMatch.importance) {
+          await (supabase as { from: (table: string) => { update: (data: Record<string, unknown>) => { eq: (col: string, val: string) => Promise<{ error: unknown }> } } }).from('memory_facts')
             .update({
               fact: fact.fact,
               importance,
               confidence,
               source_message_id: sourceMessageId,
             })
-            .eq('id', similar.id);
-          console.log('Updated existing memory:', similar.id, '→', fact.fact);
+            .eq('id', bestMatch.id);
+          console.log('Updated existing memory:', bestMatch.id, '→', fact.fact);
         } else {
           console.log('Skipped duplicate:', fact.fact);
         }
       } else {
-        // Insert new memory
-        const { error: factError } = await supabase
-          .from('memory_facts')
+        const { error: factError } = await (supabase as { from: (table: string) => { insert: (data: Record<string, unknown>) => Promise<{ error: unknown }> } }).from('memory_facts')
           .insert({
             user_id: userId,
             fact: fact.fact,
@@ -569,33 +525,40 @@ serve(async (req: Request) => {
   }
 
   const url = new URL(req.url);
-  const path = url.pathname.split('/').pop() || '';
+  const section = url.searchParams.get('section');
 
-  // Route: GET /chat → message history
-  if (req.method === 'GET' && (path === 'chat' || path === '')) {
-    return handleGetHistory(req, corsHeaders);
-  }
+  // IMPORTANT: Check section param FIRST before method matching
 
-  // Route: GET /chat?section=memories → all memories
-  if (req.method === 'GET' && url.searchParams.get('section') === 'memories') {
+  // GET with section=memories → memories endpoint
+  if (req.method === 'GET' && section === 'memories') {
     return handleGetMemories(req, corsHeaders);
   }
 
-  // Route: DELETE /chat → delete message
+  // GET without section → message history
+  if (req.method === 'GET') {
+    return handleGetHistory(req, corsHeaders);
+  }
+
+  // DELETE → delete message
   if (req.method === 'DELETE') {
     return handleDeleteMessage(req, corsHeaders);
   }
 
-  // Route: PUT /chat → update memory
+  // PUT → update memory
   if (req.method === 'PUT') {
     return handleUpdateMemory(req, corsHeaders);
   }
 
-  // Route: POST with archive/delete action → delete/archive memory
+  // POST → check body for memory operations, otherwise send message
   if (req.method === 'POST') {
-    const body = await req.clone().json().catch(() => ({}));
-    if (body.memoryId && (body.archive !== undefined || body.action === 'delete')) {
-      return handleDeleteMemory(req, corsHeaders);
+    const clonedReq = req.clone();
+    try {
+      const body = await clonedReq.json();
+      if (body.memoryId && (body.archive !== undefined || body.action === 'delete')) {
+        return handleDeleteMemory(req, corsHeaders);
+      }
+    } catch {
+      // Not JSON or no body, treat as message
     }
     return handlePostMessage(req, corsHeaders);
   }
