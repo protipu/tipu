@@ -14,7 +14,7 @@ Tipu is a single-user chat interface that:
 ## Tech Stack
 
 - **Frontend**: React 19 + Vite + TypeScript (strict mode)
-- **Styling**: Tailwind CSS v4 (blue/white modern theme)
+- **Styling**: Tailwind CSS v4 (dark companion theme with glass morphism, 3D effects, animations)
 - **State**: React Context + built-in hooks only
 - **Backend**: Supabase (Postgres, Auth, Edge Functions)
 - **AI**: Groq API (`groq/compound` model) via Supabase Edge Functions
@@ -88,6 +88,7 @@ create index idx_memory_facts_importance on memory_facts(importance desc);
 | 7 | ✅ | Security hardening, UX improvements, testing, CI/CD |
 | Phase 2 | ✅ | Foundation fixes — delete, CORS, timestamps, pagination, dead code |
 | Phase 3 | ✅ | **Memory 2.0** — enhanced memory with categories, importance, confidence, dedup |
+| Phase 4 | ✅ | **UI Redesign** — dark companion theme, glass morphism, 3D card effects, animations |
 
 ## What's Implemented
 
@@ -130,8 +131,13 @@ create index idx_memory_facts_importance on memory_facts(importance desc);
 - **Keep-alive**: Pings Supabase every 6 hours to prevent free-tier pause
 
 ### UI/UX
-- **Blue/white modern theme**: Clean, professional design
-- **Bottom navigation**: Message, Memory, Settings tabs
+- **Dark companion theme**: Deep gradient backgrounds with indigo/purple accent palette
+- **Glass morphism**: Frosted glass effects on headers, nav, cards, and input bars
+- **3D card effects**: Interactive tilt on hover for message bubbles and memory cards (perspective + rotation)
+- **Animated orbs**: Floating background orbs with slow drift animations
+- **Smooth animations**: Entrance slide-ups, scale-ins, fade-ins, wave typing indicator
+- **Glow effects**: Pulsing glow on logo, send button, and active nav items
+- **Bottom navigation**: Message, Memory, Settings tabs with animated active indicator
 - **PWA manifest**: Installable as Progressive Web App
 - **Open Graph tags**: Social sharing previews
 

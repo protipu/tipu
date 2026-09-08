@@ -39,8 +39,10 @@ export function MessageInput({ onSend, disabled = false, placeholder = 'Type a m
     }
   };
 
+  const canSend = text.trim().length > 0 && !disabled;
+
   return (
-    <form onSubmit={handleSubmit} className="p-4 bg-white border-t border-border">
+    <form onSubmit={handleSubmit} className="p-4 glass-strong border-t border-border relative z-10">
       <div className="flex items-end gap-3">
         <div className="flex-1 relative">
           <textarea
@@ -52,14 +54,18 @@ export function MessageInput({ onSend, disabled = false, placeholder = 'Type a m
             disabled={disabled}
             placeholder={placeholder}
             rows={1}
-            className="w-full px-4 py-3 text-text bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-smooth disabled:opacity-50 disabled:cursor-not-allowed resize-none placeholder:text-text-dim text-sm"
+            className="w-full px-4 py-3 text-text bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-smooth disabled:opacity-50 disabled:cursor-not-allowed resize-none placeholder:text-text-dim text-sm"
             style={{ minHeight: '44px', maxHeight: '120px' }}
           />
         </div>
         <button
           type="submit"
-          disabled={disabled || !text.trim()}
-          className="p-3 bg-primary text-white rounded-xl hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/30 focus:ring-offset-2 disabled:opacity-40 disabled:cursor-not-allowed transition-smooth flex-shrink-0 shadow-soft"
+          disabled={!canSend}
+          className={`p-3 rounded-xl transition-smooth flex-shrink-0 ${
+            canSend
+              ? 'bg-primary-gradient text-white shadow-glow hover:shadow-[0_0_30px_rgba(99,102,241,0.5)] active:scale-95'
+              : 'bg-white/5 text-text-dim border border-white/10 cursor-not-allowed'
+          }`}
           aria-label="Send message"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
