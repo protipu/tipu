@@ -89,7 +89,7 @@ create index memory_facts_user_id_idx on memory_facts (user_id);
 | 3 | ✅ | Persist messages, load conversation history on reload |
 | 4 | ✅ | Long-term memory (fact extraction + recall in system prompt) |
 | 5 | ✅ | Polish: warm cozy theme, gradient backgrounds, glassmorphism, shadows, loading states |
-| 6 | ⏳ | Capacitor Android APK |
+| 6 | ✅ | Capacitor Android APK |
 
 ## Development
 
@@ -118,6 +118,23 @@ npm run lint
   - `VITE_SUPABASE_ANON_KEY`
 - **Edge Function secrets** (set in Supabase dashboard):
   - `GROQ_API_KEY`
+
+## Android APK Build
+
+```bash
+# Build web assets
+npm run build
+
+# Sync to Android
+npx cap sync android
+
+# Open in Android Studio (for building APK)
+npx cap open android
+
+# Or build APK from command line (requires Android SDK)
+cd android && ./gradlew assembleDebug
+# APK output: android/app/build/outputs/apk/debug/app-debug.apk
+```
 
 ## Keep-Alive
 

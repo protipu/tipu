@@ -1,4 +1,5 @@
-# Logs
+# Android (built from web assets)
+android/
 logs
 *.log
 npm-debug.log*
