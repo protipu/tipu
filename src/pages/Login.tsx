@@ -25,30 +25,26 @@ export function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-warm-gradient p-4 md:p-8">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-gold shadow-glow mb-6">
-            <svg className="w-8 h-8 text-background" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </svg>
+    <div className="min-h-screen flex items-center justify-center bg-app-gradient p-4">
+      <div className="w-full max-w-sm">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-20 h-20 mb-4">
+            <img src="/mascot.svg" alt="Tipu" className="w-20 h-20" />
           </div>
-          <h1 className="text-3xl md:text-4xl font-medium text-text mb-2">Tipu</h1>
-          <p className="text-text-muted">
-            {isSignUp ? 'Create your account' : 'Welcome back'}
-          </p>
+          <h1 className="text-3xl font-bold text-text">Tipu</h1>
+          <p className="text-text-muted text-sm mt-1">Your AI Companion</p>
         </div>
 
-        <div className="glass-card rounded-2xl p-6 md:p-8 shadow-warm">
-          <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="bg-white rounded-2xl p-6 shadow-medium border border-border">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div className="p-4 rounded-xl bg-error-bg border border-error/30 text-error text-sm animate-slide-up">
+              <div className="p-3 rounded-xl bg-error-bg border border-error/20 text-error text-sm animate-slide-up">
                 {error}
               </div>
             )}
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-text-muted mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-text-muted mb-1.5">
                 Email
               </label>
               <input
@@ -58,14 +54,14 @@ export function Login() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoComplete="email"
-                className="w-full px-5 py-4 text-text bg-background border border-border-light rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-smooth placeholder:text-text-dim"
+                className="w-full px-4 py-3 text-text bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-smooth placeholder:text-text-dim"
                 placeholder="you@example.com"
                 disabled={loading}
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-text-muted mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-text-muted mb-1.5">
                 Password
               </label>
               <input
@@ -75,7 +71,7 @@ export function Login() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 autoComplete={isSignUp ? 'new-password' : 'current-password'}
-                className="w-full px-5 py-4 text-text bg-background border border-border-light rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-smooth placeholder:text-text-dim"
+                className="w-full px-4 py-3 text-text bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-smooth placeholder:text-text-dim"
                 placeholder="••••••••"
                 disabled={loading}
               />
@@ -84,21 +80,21 @@ export function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 px-6 bg-gradient-to-br from-primary via-primary-hover to-primary-muted text-background font-medium rounded-xl hover:from-primary-hover hover:via-primary-hover hover:to-primary focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 focus:ring-offset-background disabled:opacity-50 disabled:cursor-not-allowed transition-smooth shadow-warm shadow-glow"
+              className="w-full py-3 px-6 bg-primary-gradient text-white font-medium rounded-xl hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-smooth shadow-soft"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
-                  <span className="w-5 h-5 border-2 border-background border-t-transparent rounded-full animate-spin"></span>
+                  <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
                   Please wait...
                 </span>
               ) : (
-                isSignUp ? 'Create account' : 'Sign in'
+                isSignUp ? 'Create account' : 'Login'
               )}
             </button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-text-muted">
-            {isSignUp ? 'Already have an account?' : 'Need an account?'} {' '}
+          <p className="mt-4 text-center text-sm text-text-muted">
+            {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
             <button
               type="button"
               onClick={() => {
@@ -112,8 +108,8 @@ export function Login() {
           </p>
         </div>
 
-        <p className="mt-8 text-center text-xs text-text-dim max-w-xs mx-auto">
-          Your personal AI companion — warm, friendly, and remembers everything you share.
+        <p className="mt-6 text-center text-xs text-text-dim">
+          Your personal AI companion
         </p>
       </div>
     </div>

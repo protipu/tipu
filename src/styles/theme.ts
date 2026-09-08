@@ -1,43 +1,37 @@
-// Theme configuration - single source of truth for all design tokens
-// Modify this file to change the entire app's appearance without touching component logic
-
+// Theme configuration - Blue/White modern theme
 export const theme = {
   colors: {
-    // Base backgrounds
-    background: '#1A1612',
-    backgroundElevated: '#231E1A',
-    backgroundCard: '#2A2420',
+    background: '#F0F4F8',
+    backgroundElevated: '#FFFFFF',
+    backgroundCard: '#FFFFFF',
     
-    // Primary - warm gold
-    primary: '#D4A843',
-    primaryHover: '#E8C05A',
-    primaryLight: '#F5E6B8',
-    primaryMuted: '#8B7333',
+    primary: '#2563EB',
+    primaryHover: '#3B82F6',
+    primaryLight: '#DBEAFE',
+    primaryMuted: '#1D4ED8',
     
-    // Accent - soft blue
-    accent: '#5BA4D9',
-    accentHover: '#7BC0E8',
-    accentLight: '#D6EEF8',
+    accent: '#10B981',
+    accentHover: '#34D399',
+    accentLight: '#D1FAE5',
     
-    // Text
-    text: '#F5F0E8',
-    textMuted: '#B8A898',
-    textDim: '#8B7D6D',
+    text: '#1E293B',
+    textMuted: '#64748B',
+    textDim: '#94A3B8',
     
-    // Borders
-    border: '#3D342C',
-    borderLight: '#4A4038',
+    border: '#E2E8F0',
+    borderLight: '#F1F5F9',
     
-    // Status
-    error: '#E86C5A',
-    errorBg: '#3D1E1A',
-    success: '#6BBF7A',
-    warning: '#F0B84E',
+    error: '#EF4444',
+    errorBg: '#FEF2F2',
+    success: '#10B981',
+    warning: '#F59E0B',
+    
+    userBubble: '#2563EB',
+    assistantBubble: '#FFFFFF',
   },
   
   fonts: {
     sans: "'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-    serif: "'Merriweather', Georgia, serif",
   },
   
   radius: {
@@ -49,68 +43,16 @@ export const theme = {
   },
   
   shadows: {
-    soft: '0 2px 8px -2px rgb(0 0 0 / 0.3), 0 1px 3px -1px rgb(0 0 0 / 0.2)',
-    warm: '0 4px 16px -4px rgb(212 168 67 / 0.2), 0 2px 8px -2px rgb(0 0 0 / 0.3)',
-    glow: '0 0 24px -4px rgb(212 168 67 / 0.3), 0 4px 16px -4px rgb(0 0 0 / 0.4)',
-    innerWarm: 'inset 0 1px 2px 0 rgb(212 168 67 / 0.1)',
+    soft: '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
+    medium: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+    large: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
+    glow: '0 0 20px rgb(37 99 235 / 0.3)',
   },
   
   gradients: {
-    warm: 'linear-gradient(135deg, #1A1612 0%, #2D241C 50%, #1A1612 100%)',
-    gold: 'linear-gradient(135deg, #D4A843 0%, #E8C05A 100%)',
-    accent: 'linear-gradient(135deg, #5BA4D9 0%, #7BC0E8 100%)',
-    surface: 'linear-gradient(180deg, #2A2420 0%, #231E1A 100%)',
+    primary: 'linear-gradient(135deg, #2563EB 0%, #3B82F6 100%)',
+    warm: 'linear-gradient(135deg, #F0F4F8 0%, #E2E8F0 100%)',
   },
-  
-  transitions: {
-    smooth: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-  },
-  
-  glass: {
-    warm: 'rgba(38, 30, 26, 0.85)',
-    card: 'rgba(42, 36, 32, 0.9)',
-  },
-} as const;
-
-// CSS custom properties for use in global CSS
-export const cssVars = {
-  '--color-background': theme.colors.background,
-  '--color-background-elevated': theme.colors.backgroundElevated,
-  '--color-background-card': theme.colors.backgroundCard,
-  '--color-primary': theme.colors.primary,
-  '--color-primary-hover': theme.colors.primaryHover,
-  '--color-primary-light': theme.colors.primaryLight,
-  '--color-primary-muted': theme.colors.primaryMuted,
-  '--color-accent': theme.colors.accent,
-  '--color-accent-hover': theme.colors.accentHover,
-  '--color-accent-light': theme.colors.accentLight,
-  '--color-text': theme.colors.text,
-  '--color-text-muted': theme.colors.textMuted,
-  '--color-text-dim': theme.colors.textDim,
-  '--color-border': theme.colors.border,
-  '--color-border-light': theme.colors.borderLight,
-  '--color-error': theme.colors.error,
-  '--color-error-bg': theme.colors.errorBg,
-  '--color-success': theme.colors.success,
-  '--color-warning': theme.colors.warning,
-  '--font-sans': theme.fonts.sans,
-  '--font-serif': theme.fonts.serif,
-  '--radius-sm': theme.radius.sm,
-  '--radius-md': theme.radius.md,
-  '--radius-lg': theme.radius.lg,
-  '--radius-xl': theme.radius.xl,
-  '--radius-full': theme.radius.full,
-  '--shadow-soft': theme.shadows.soft,
-  '--shadow-warm': theme.shadows.warm,
-  '--shadow-glow': theme.shadows.glow,
-  '--shadow-inner-warm': theme.shadows.innerWarm,
-  '--gradient-warm': theme.gradients.warm,
-  '--gradient-gold': theme.gradients.gold,
-  '--gradient-accent': theme.gradients.accent,
-  '--gradient-surface': theme.gradients.surface,
-  '--transition-smooth': theme.transitions.smooth,
-  '--glass-warm': theme.glass.warm,
-  '--glass-card': theme.glass.card,
 } as const;
 
 export type Theme = typeof theme;

@@ -92,8 +92,8 @@ async function handleGetHistory(req: Request, corsHeaders: Record<string, string
       .from('messages')
       .select('id, role, content, created_at')
       .eq('user_id', user!.id)
-      .order('created_at', { ascending: true })
-      .limit(20);
+      .order('created_at', { ascending: false })
+      .limit(5);
 
     if (error) throw error;
 

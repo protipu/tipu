@@ -6,7 +6,7 @@ interface MessageInputProps {
   placeholder?: string;
 }
 
-export function MessageInput({ onSend, disabled = false, placeholder = 'Message Tipu...' }: MessageInputProps) {
+export function MessageInput({ onSend, disabled = false, placeholder = 'Type a message...' }: MessageInputProps) {
   const [text, setText] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -35,12 +35,12 @@ export function MessageInput({ onSend, disabled = false, placeholder = 'Message 
     const textarea = textareaRef.current;
     if (textarea) {
       textarea.style.height = 'auto';
-      textarea.style.height = `${Math.min(textarea.scrollHeight, 140)}px`;
+      textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`;
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-4 md:p-6 border-t border-border-light bg-surface-gradient/50 backdrop-blur-xl">
+    <form onSubmit={handleSubmit} className="p-4 bg-white border-t border-border">
       <div className="flex items-end gap-3">
         <div className="flex-1 relative">
           <textarea
@@ -52,14 +52,14 @@ export function MessageInput({ onSend, disabled = false, placeholder = 'Message 
             disabled={disabled}
             placeholder={placeholder}
             rows={1}
-            className="w-full px-5 py-4 text-text bg-background-card border border-border-light rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-smooth disabled:opacity-50 disabled:cursor-not-allowed resize-none placeholder:text-text-dim"
-            style={{ minHeight: '56px', maxHeight: '160px' }}
+            className="w-full px-4 py-3 text-text bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-smooth disabled:opacity-50 disabled:cursor-not-allowed resize-none placeholder:text-text-dim text-sm"
+            style={{ minHeight: '44px', maxHeight: '120px' }}
           />
         </div>
         <button
           type="submit"
           disabled={disabled || !text.trim()}
-          className="p-4 bg-gradient-to-br from-primary via-primary-hover to-primary-muted text-background rounded-2xl hover:from-primary-hover hover:via-primary-hover hover:to-primary focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 focus:ring-offset-background disabled:opacity-40 disabled:cursor-not-allowed transition-smooth flex-shrink-0 shadow-warm shadow-glow"
+          className="p-3 bg-primary text-white rounded-xl hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/30 focus:ring-offset-2 disabled:opacity-40 disabled:cursor-not-allowed transition-smooth flex-shrink-0 shadow-soft"
           aria-label="Send message"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
