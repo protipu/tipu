@@ -82,7 +82,10 @@ export function Chat() {
         body: { message: content },
       });
 
-      if (error) throw new Error(error.message);
+      if (error) {
+        console.error('Edge Function error:', error);
+        throw new Error(error.message || error.toString());
+      }
 
       setIsTyping(false);
 
