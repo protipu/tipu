@@ -28,8 +28,8 @@ export function Login() {
     <div className="min-h-screen flex items-center justify-center bg-app-gradient p-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 mb-4">
-            <img src="/mascot.svg" alt="Tipu" className="w-20 h-20" />
+          <div className="inline-flex items-center justify-center w-20 h-20 mb-4 rounded-full bg-primary text-white text-3xl font-bold">
+            T
           </div>
           <h1 className="text-3xl font-bold text-text">Tipu</h1>
           <p className="text-text-muted text-sm mt-1">Your AI Companion</p>

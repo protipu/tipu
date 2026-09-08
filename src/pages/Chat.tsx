@@ -169,7 +169,7 @@ export function Chat() {
       <div className="min-h-screen flex flex-col bg-app-gradient">
         <header className="bg-white border-b border-border sticky top-0 z-10">
           <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
-            <img src="/mascot.svg" alt="Tipu" className="w-10 h-10" />
+            <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center text-lg font-bold">T</div>
             <h1 className="text-xl font-bold text-text">Tipu</h1>
           </div>
         </header>
@@ -191,7 +191,7 @@ export function Chat() {
       <header className="bg-white border-b border-border sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src="/mascot.svg" alt="Tipu" className="w-10 h-10" />
+            <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center text-lg font-bold">T</div>
             <div>
               <h1 className="text-lg font-bold text-text">Tipu</h1>
               <p className="text-xs text-text-dim">Your AI Companion</p>

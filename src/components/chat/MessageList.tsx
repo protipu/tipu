@@ -79,7 +79,7 @@ export function MessageList({ messages, isTyping = false, onDelete, hasMore = fa
 
       {messages.length === 0 && !isTyping && (
         <div className="flex flex-col items-center justify-center h-full px-4">
-          <img src="/mascot.svg" alt="Tipu" className="w-24 h-24 mb-4 animate-pulse-soft" />
+          <div className="w-24 h-24 mb-4 rounded-full bg-primary text-white flex items-center justify-center text-4xl font-bold animate-pulse-soft">T</div>
           <h2 className="text-xl font-bold text-text mb-1">Hi, I'm Tipu!</h2>
           <p className="text-text-muted text-center text-sm max-w-xs">
             Your personal AI companion. Ask me anything — I remember what you share.
