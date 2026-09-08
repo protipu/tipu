@@ -40,7 +40,7 @@ export class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <div className="min-h-screen flex items-center justify-center bg-warm-gradient p-4">
+        <div className="min-h-screen flex items-center justify-center bg-app-gradient p-4">
           <div className="w-full max-w-md text-center">
             <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-error-bg border border-error/30 flex items-center justify-center">
               <svg className="w-8 h-8 text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -60,7 +60,7 @@ export class ErrorBoundary extends Component<Props, State> {
               </button>
               <button
                 onClick={this.handleReload}
-                className="px-6 py-3 text-sm font-medium text-background bg-gradient-to-br from-primary via-primary-hover to-primary-muted rounded-xl hover:from-primary-hover hover:via-primary-hover hover:to-primary transition-smooth shadow-warm"
+                className="px-6 py-3 text-sm font-medium text-background bg-gradient-to-br from-primary via-primary-hover to-primary-muted rounded-xl hover:from-primary-hover hover:via-primary-hover hover:to-primary transition-smooth shadow-medium"
               >
                 Reload page
               </button>

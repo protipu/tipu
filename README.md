@@ -14,7 +14,7 @@ Tipu is a single-user chat interface that:
 ## Tech Stack
 
 - **Frontend**: React 19 + Vite + TypeScript (strict mode)
-- **Styling**: Tailwind CSS v4 (blue/white modern theme with robot mascot)
+- **Styling**: Tailwind CSS v4 (blue/white modern theme)
 - **State**: React Context + built-in hooks only
 - **Backend**: Supabase (Postgres, Auth, Edge Functions)
 - **AI**: Groq API (`groq/compound` model) via Supabase Edge Functions
@@ -83,7 +83,7 @@ create index idx_memory_facts_importance on memory_facts(importance desc);
 | 2 | ✅ | Core chat loop (UI + Edge Function → Groq API, error/timeout/retry handling) |
 | 3 | ✅ | Persist messages, load conversation history on reload |
 | 4 | ✅ | Long-term memory (fact extraction + recall in system prompt) |
-| 5 | ✅ | UI polish — blue/white modern theme with robot mascot |
+| 5 | ✅ | UI polish — blue/white modern theme |
 | 6 | ✅ | Capacitor Android APK |
 | 7 | ✅ | Security hardening, UX improvements, testing, CI/CD |
 | Phase 2 | ✅ | Foundation fixes — delete, CORS, timestamps, pagination, dead code |
@@ -103,7 +103,7 @@ create index idx_memory_facts_importance on memory_facts(importance desc);
 - **Rich system prompt**: AI receives top memories by importance with category context
 
 ### Security
-- CORS restricted to `tipu.vercel.app` + localhost (explicit allowlist)
+- CORS restricted to `tipu.vercel.app` + `tipu-pearl.vercel.app` + localhost (explicit allowlist)
 - Environment variable validation at Edge Function startup
 - Service role key with manual JWT verification
 - Input validation (max 4000 chars per message)
@@ -131,7 +131,6 @@ create index idx_memory_facts_importance on memory_facts(importance desc);
 
 ### UI/UX
 - **Blue/white modern theme**: Clean, professional design
-- **Robot mascot**: Custom SVG mascot (`public/mascot.svg`)
 - **Bottom navigation**: Message, Memory, Settings tabs
 - **PWA manifest**: Installable as Progressive Web App
 - **Open Graph tags**: Social sharing previews
