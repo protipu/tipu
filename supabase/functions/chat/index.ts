@@ -117,9 +117,20 @@ Deno.serve(async (req) => {
         .select('role, content').eq('user_id', user!.id)
         .order('created_at', { ascending: false }).limit(5);
 
-      const { data: mems } = await sb.from('memory_facts')
-        .select('fact, category, importance').eq('user_id', user!.id).eq('status', 'active')
-        .order('importance', { ascending: false }).limit(8);
+      const lowMsg = message.toLowerCase().trim();
+      const isGreeting = /^(hi|hey|hello|sup|yo|hiya|howdy|hola|assalamu|salaam|good\s*(morning|afternoon|evening|night)|what'?s?\s*up|how\s*are\s*you|how'?s?\s*it\s*going|kemon\s*acho|ki\s*khobor)[\s!?.]*$/i.test(lowMsg);
+      const isShort = lowMsg.split(/\s+/).length <= 3;
+
+      let memText = '';
+      if (!isGreeting && !isShort) {
+        const { data: mems } = await sb.from('memory_facts')
+          .select('fact, category, importance').eq('user_id', user!.id).eq('status', 'active')
+          .order('importance', { ascending: false }).limit(5);
+        if (mems && mems.length > 0) {
+          memText = '\n\nPrivate notes (use only if directly relevant — never dump all of these):\n' +
+            (mems as Array<{ fact: string }>).map(m => m.fact).join('\n');
+        }
+      }
 
       // Read language preference from memory_facts
       const { data: langPrefs } = await sb.from('memory_facts')
@@ -139,10 +150,6 @@ Deno.serve(async (req) => {
           if (fact.includes(key)) { langName = val; break; }
         }
       }
-
-      const memText = (mems || []).length > 0
-        ? (mems as Array<{ fact: string; category: string; importance: number }>).map(m => `${m.fact}`).join('\n')
-        : '';
 
       const langInstruction = langName
         ? `\n\nIMPORTANT: The user prefers ${langName}. Respond in ${langName} when they write in ${langName} or when it's clearly their preference.`
