@@ -52,18 +52,6 @@ export function MemoryCard({ memory, onUpdate, onDelete, onArchive }: MemoryCard
     }
   };
 
-  const importanceColor = memory.importance >= 80
-    ? 'text-rose-400'
-    : memory.importance >= 50
-    ? 'text-amber-400'
-    : 'text-text-dim';
-
-  const importanceBar = memory.importance >= 80
-    ? 'bg-rose-500'
-    : memory.importance >= 50
-    ? 'bg-amber-500'
-    : 'bg-text-dim';
-
   const timeAgo = (date: string) => {
     const diff = Date.now() - new Date(date).getTime();
     const hours = Math.floor(diff / 3600000);
@@ -78,35 +66,18 @@ export function MemoryCard({ memory, onUpdate, onDelete, onArchive }: MemoryCard
       ref={cardRef}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      className="glass-light rounded-2xl border border-border shadow-soft hover:shadow-medium group transition-smooth"
+      className="bg-surface rounded-2xl border border-hairline shadow-soft hover:shadow-medium group transition-smooth"
       style={{ transition: 'transform 0.1s ease-out, box-shadow 0.3s ease' }}
     >
-      {/* Main content */}
-      <div className="p-4">
+      <div className="p-3.5">
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
-            {/* Category badge */}
-            <div className="flex items-center gap-2 mb-2.5">
-              <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${meta.color}`}>
-                <span>{meta.icon}</span>
-                {meta.label}
-              </span>
-              <span className={`text-xs font-semibold ${importanceColor}`}>
-                {memory.importance >= 80 ? 'High' : memory.importance >= 50 ? 'Medium' : 'Low'}
-              </span>
-              {/* Importance bar */}
-              <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden max-w-[60px]">
-                <div className={`h-full rounded-full ${importanceBar}`} style={{ width: `${memory.importance}%` }} />
-              </div>
-            </div>
-
-            {/* Fact text */}
             {editing ? (
               <div className="space-y-3 animate-slide-down">
                 <textarea
                   value={editFact}
                   onChange={(e) => setEditFact(e.target.value)}
-                  className="w-full px-3 py-2 text-sm bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 resize-none text-text placeholder:text-text-dim"
+                  className="w-full px-3 py-2 text-sm bg-white/5 border border-hairline rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none text-text placeholder:text-text-dim"
                   rows={3}
                   autoFocus
                 />
@@ -126,29 +97,28 @@ export function MemoryCard({ memory, onUpdate, onDelete, onArchive }: MemoryCard
                   <button
                     onClick={handleSave}
                     disabled={saving || !editFact.trim()}
-                    className="px-3.5 py-1.5 text-xs font-medium text-white bg-primary-gradient rounded-lg hover:shadow-glow transition-smooth disabled:opacity-50"
+                    className="px-3.5 py-1.5 text-xs font-medium text-[#0A0D16] bg-primary-gradient rounded-lg hover:shadow-glow transition-smooth disabled:opacity-50"
                   >
                     {saving ? 'Saving...' : 'Save'}
                   </button>
                   <button
                     onClick={handleCancel}
-                    className="px-3.5 py-1.5 text-xs font-medium text-text-dim hover:text-text glass-light rounded-lg border border-border transition-smooth"
+                    className="px-3.5 py-1.5 text-xs font-medium text-text-dim hover:text-text glass-light rounded-lg border border-hairline transition-smooth"
                   >
                     Cancel
                   </button>
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-text leading-relaxed">{memory.fact}</p>
+              <p className="text-[13.5px] text-text leading-relaxed">{memory.fact}</p>
             )}
           </div>
 
-          {/* Actions menu */}
           {!editing && (
             <div className="relative">
               <button
                 onClick={() => setShowActions(!showActions)}
-                className="p-1.5 text-text-dim hover:text-text rounded-lg glass-light hover:bg-white/10 transition-smooth opacity-0 group-hover:opacity-100"
+                className="p-1 text-text-dim hover:text-text rounded-lg transition-smooth opacity-0 group-hover:opacity-100"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01" />
@@ -156,10 +126,10 @@ export function MemoryCard({ memory, onUpdate, onDelete, onArchive }: MemoryCard
               </button>
 
               {showActions && (
-                <div className="absolute right-0 top-8 z-10 glass-strong border border-border rounded-xl shadow-large py-1 min-w-[120px] animate-scale-in">
+                <div className="absolute right-0 top-7 z-10 glass-strong border border-hairline rounded-xl shadow-large py-1 min-w-[120px] animate-scale-in">
                   <button
                     onClick={() => { setEditing(true); setShowActions(false); }}
-                    className="w-full px-3 py-2 text-left text-xs text-text hover:bg-white/5 transition-smooth flex items-center gap-2"
+                    className="w-full px-3 py-2 text-left text-xs text-text hover:bg-white/[0.03] transition-smooth flex items-center gap-2"
                   >
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -168,7 +138,7 @@ export function MemoryCard({ memory, onUpdate, onDelete, onArchive }: MemoryCard
                   </button>
                   <button
                     onClick={() => { onArchive(memory.id); setShowActions(false); }}
-                    className="w-full px-3 py-2 text-left text-xs text-text hover:bg-white/5 transition-smooth flex items-center gap-2"
+                    className="w-full px-3 py-2 text-left text-xs text-text hover:bg-white/[0.03] transition-smooth flex items-center gap-2"
                   >
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
@@ -177,7 +147,7 @@ export function MemoryCard({ memory, onUpdate, onDelete, onArchive }: MemoryCard
                   </button>
                   <button
                     onClick={() => { onDelete(memory.id); setShowActions(false); }}
-                    className="w-full px-3 py-2 text-left text-xs text-error hover:bg-error/10 transition-smooth flex items-center gap-2"
+                    className="w-full px-3 py-2 text-left text-xs text-error hover:bg-error/5 transition-smooth flex items-center gap-2"
                   >
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -191,10 +161,11 @@ export function MemoryCard({ memory, onUpdate, onDelete, onArchive }: MemoryCard
         </div>
       </div>
 
-      {/* Footer */}
       {!editing && (
-        <div className="px-4 pb-3 flex items-center justify-between text-[10px] text-text-dim">
-          <span>Confidence: {memory.confidence}%</span>
+        <div className="px-3.5 pb-2.5 flex items-center justify-between text-[10px] text-text-dim">
+          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium" style={{ background: meta.color.includes('bg-') ? undefined : 'var(--color-gold-dim)', color: 'var(--color-gold-soft)' }}>
+            {meta.icon} {meta.label}
+          </span>
           <span>{timeAgo(memory.updated_at || memory.created_at)}</span>
         </div>
       )}

@@ -12,6 +12,7 @@ export function MemoryPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterTab>('all');
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
 
   useEffect(() => { loadMemories(); }, []);
 
@@ -70,37 +71,45 @@ export function MemoryPage() {
     }
   };
 
-  const filtered = filter === 'all' ? memories : memories.filter(m => m.category === filter);
+  const filtered = (filter === 'all' ? memories : memories.filter(m => m.category === filter))
+    .filter(m => search === '' || m.fact.toLowerCase().includes(search.toLowerCase()));
   const counts = memories.reduce((a, m) => { a[m.category] = (a[m.category] || 0) + 1; return a; }, {} as Record<string, number>);
 
   return (
     <div className="flex-1 flex flex-col h-full relative z-10">
-      {/* Header */}
-      <div className="glass-strong border-b border-border px-4 py-4 animate-slide-down">
-        <div className="max-w-2xl mx-auto">
-          <div className="flex items-center gap-3 mb-1">
-            <div className="w-8 h-8 rounded-lg bg-accent-light flex items-center justify-center">
-              <svg className="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-              </svg>
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-gradient">Memory</h2>
-              <p className="text-xs text-text-dim">{memories.length} {memories.length === 1 ? 'memory' : 'memories'} stored</p>
-            </div>
-          </div>
+      {/* Search bar */}
+      <div className="px-4 pt-4 pb-2">
+        <div className="max-w-lg mx-auto relative">
+          <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-dim" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="7" strokeWidth="1.8"/>
+            <path d="M20 20l-3.5-3.5" strokeWidth="1.8" strokeLinecap="round"/>
+          </svg>
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search what Tipu remembers..."
+            className="w-full pl-10 pr-4 py-2.5 text-sm bg-surface border border-hairline rounded-2xl text-text placeholder:text-text-dim focus:outline-none focus:ring-2 focus:ring-primary/30 transition-smooth"
+          />
         </div>
       </div>
 
+      {/* Intro text */}
+      <div className="px-4 pb-3">
+        <p className="max-w-lg mx-auto text-[13px] text-text-muted leading-relaxed">
+          Everything below is something you told Tipu directly. Nothing here was guessed — you can edit or remove any of it.
+        </p>
+      </div>
+
       {/* Filter Tabs */}
-      <div className="glass-strong border-b border-border px-4 py-3">
-        <div className="max-w-2xl mx-auto flex gap-2 overflow-x-auto scrollbar-thin pb-1">
+      <div className="px-4 pb-3">
+        <div className="max-w-lg mx-auto flex gap-2 overflow-x-auto scrollbar-thin pb-1">
           <button
             onClick={() => setFilter('all')}
             className={`px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-smooth ${
               filter === 'all'
-                ? 'bg-primary-gradient text-white shadow-glow'
-                : 'glass-light text-text-dim hover:text-text border border-border'
+                ? 'bg-primary-gradient text-[#0A0D16] shadow-glow'
+                : 'glass-light text-text-dim hover:text-text border border-hairline'
             }`}
           >
             All ({memories.length})
@@ -113,8 +122,8 @@ export function MemoryPage() {
                 onClick={() => setFilter(c)}
                 className={`px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-smooth flex items-center gap-1.5 ${
                   filter === c
-                    ? 'bg-primary-gradient text-white shadow-glow'
-                    : 'glass-light text-text-dim hover:text-text border border-border'
+                    ? 'bg-primary-gradient text-[#0A0D16] shadow-glow'
+                    : 'glass-light text-text-dim hover:text-text border border-hairline'
                 }`}
               >
                 <span>{m.icon}</span>{m.label} ({counts[c]})
@@ -125,8 +134,8 @@ export function MemoryPage() {
       </div>
 
       {/* Memory List */}
-      <div className="flex-1 overflow-y-auto px-4 py-4">
-        <div className="max-w-2xl mx-auto space-y-3">
+      <div className="flex-1 overflow-y-auto px-4 py-2">
+        <div className="max-w-lg mx-auto space-y-2.5">
           {loading && (
             <div className="flex flex-col items-center justify-center py-12 animate-fade-in">
               <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />
@@ -143,12 +152,12 @@ export function MemoryPage() {
           )}
           {!loading && !error && filtered.length === 0 && (
             <div className="flex flex-col items-center justify-center py-12 animate-scale-in">
-              <div className="w-16 h-16 rounded-2xl glass-light border border-border flex items-center justify-center mb-4">
+              <div className="w-16 h-16 rounded-2xl glass-light border border-hairline flex items-center justify-center mb-4">
                 <svg className="w-8 h-8 text-text-dim" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                 </svg>
               </div>
-              <h3 className="text-sm font-semibold text-text mb-1">
+              <h3 className="text-sm font-semibold text-text mb-1" style={{ fontFamily: 'var(--font-serif)' }}>
                 {filter === 'all' ? 'No memories yet' : `No ${CATEGORY_META[filter].label.toLowerCase()} memories`}
               </h3>
               <p className="text-xs text-text-muted text-center max-w-[200px]">
@@ -157,7 +166,7 @@ export function MemoryPage() {
             </div>
           )}
           {!loading && !error && filtered.map((m, i) => (
-            <div key={m.id} className="animate-slide-up" style={{ animationDelay: `${i * 0.05}s` }}>
+            <div key={m.id} className="animate-slide-up" style={{ animationDelay: `${i * 0.04}s` }}>
               <MemoryCard memory={m} onUpdate={handleUpdate} onDelete={handleDelete} onArchive={handleArchive} />
             </div>
           ))}

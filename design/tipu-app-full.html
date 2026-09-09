@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tipu — Full App Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --void:#0A0D16;
+    --surface:#131829;
+    --surface-raised:#1C2440;
+    --gold:#C9A24B;
+    --gold-soft:#E8CE8C;
+    --gold-dim:rgba(201,162,75,0.14);
+    --text-primary:#EDE9DE;
+    --text-muted:#8891A8;
+    --text-faint:#5B6178;
+    --hairline:rgba(201,162,75,0.16);
+    --danger:#B8654F;
+    --good:#6FCF97;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:#05060A;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:40px 16px;
+    font-family:'Inter',sans-serif;
+  }
+  .caption{
+    position:fixed; top:16px; left:50%; transform:translateX(-50%);
+    color:var(--text-faint); font-size:12px; letter-spacing:0.02em;
+  }
+
+  .device{
+    width:390px; height:844px;
+    background:var(--void);
+    border-radius:44px;
+    border:1px solid rgba(201,162,75,0.18);
+    box-shadow:0 40px 100px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.02);
+    overflow:hidden;
+    display:flex; flex-direction:column;
+    position:relative;
+  }
+
+  .status-bar{
+    height:48px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 26px; color:var(--text-primary); font-size:14px; font-weight:600;
+  }
+  .status-bar .icons{ display:flex; gap:6px; align-items:center; opacity:0.85; }
+
+  .app-header{
+    flex-shrink:0; padding:6px 20px 18px;
+    display:flex; align-items:center; gap:12px;
+    border-bottom:1px solid var(--hairline);
+  }
+  .avatar-ring{
+    width:42px; height:42px; border-radius:50%;
+    background:radial-gradient(circle at 30% 25%, var(--gold-soft), var(--gold) 60%, #8a6b28 100%);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Fraunces',serif; font-weight:600; font-size:18px; color:#0A0D16;
+    flex-shrink:0;
+    box-shadow:0 0 0 1px rgba(201,162,75,0.35), 0 4px 14px rgba(201,162,75,0.18);
+  }
+  .header-text{ flex:1; min-width:0; }
+  .header-text .name{ font-family:'Fraunces',serif; font-size:19px; font-weight:500; color:var(--text-primary); letter-spacing:0.01em; }
+  .header-text .status{ font-size:12px; color:var(--text-muted); margin-top:2px; display:flex; align-items:center; gap:5px; }
+  .status-dot{ width:6px; height:6px; border-radius:50%; background:var(--good); box-shadow:0 0 6px rgba(111,207,151,0.7); }
+  .header-action{ width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center; color:var(--text-muted); border:1px solid var(--hairline); }
+
+  /* ===== Screens ===== */
+  .screen{ display:none; flex:1; min-height:0; flex-direction:column; }
+  .screen.active{ display:flex; }
+
+  /* Chat */
+  .chat{ flex:1; overflow-y:auto; padding:18px 16px 8px; display:flex; flex-direction:column; gap:14px; }
+  .day-divider{ text-align:center; font-size:11px; color:var(--text-faint); letter-spacing:0.08em; text-transform:uppercase; margin:6px 0 4px; }
+  .row{ display:flex; gap:8px; max-width:100%; }
+  .row.from-user{ justify-content:flex-end; }
+  .row.from-tipu{ justify-content:flex-start; }
+  .bubble-avatar{ width:26px; height:26px; border-radius:50%; background:linear-gradient(160deg,#2A3358,#161C33); border:1px solid var(--hairline); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-family:'Fraunces',serif; font-size:12px; color:var(--gold-soft); margin-top:auto; }
+  .bubble{ max-width:78%; padding:11px 14px; border-radius:16px; font-size:14.5px; line-height:1.5; }
+  .bubble p{ margin:0 0 6px; } .bubble p:last-child{ margin-bottom:0; }
+  .bubble strong{ color:var(--gold-soft); font-weight:600; }
+  .from-user .bubble{ background:var(--gold-dim); border:1px solid rgba(201,162,75,0.32); color:var(--text-primary); border-bottom-right-radius:4px; max-width:78%; margin-left:auto; }
+  .from-tipu .bubble{ background:var(--surface); border:1px solid var(--hairline); color:var(--text-primary); border-bottom-left-radius:4px; }
+  .bubble h4{ font-size:12.5px; font-weight:700; color:var(--gold-soft); letter-spacing:0.03em; margin:2px 0 8px; }
+  .ledger{ width:100%; border-collapse:collapse; margin:8px 0; font-size:13px; }
+  .ledger td{ padding:6px 0; border-bottom:1px dashed rgba(201,162,75,0.18); color:var(--text-muted); }
+  .ledger td:last-child{ text-align:right; color:var(--text-primary); font-variant-numeric:tabular-nums; }
+  .ledger tr.total td{ border-bottom:none; border-top:1px solid var(--hairline); padding-top:9px; color:var(--gold-soft); font-weight:600; }
+  .timestamp{ font-size:10.5px; color:var(--text-faint); margin-top:5px; padding:0 4px; }
+  .from-user .timestamp{ text-align:right; }
+  .suggestion-row{ display:flex; gap:8px; overflow-x:auto; padding:2px 2px 6px; }
+  .suggestion-chip{ flex-shrink:0; padding:8px 14px; border-radius:20px; border:1px solid var(--hairline); color:var(--text-muted); font-size:12.5px; background:rgba(255,255,255,0.02); white-space:nowrap; }
+
+  .input-bar{ flex-shrink:0; padding:10px 14px 14px; border-top:1px solid var(--hairline); background:var(--void); }
+  .input-shell{ display:flex; align-items:center; gap:8px; background:var(--surface); border:1px solid var(--hairline); border-radius:22px; padding:6px 6px 6px 16px; }
+  .input-shell input{ flex:1; background:transparent; border:none; outline:none; color:var(--text-primary); font-family:'Inter',sans-serif; font-size:14.5px; }
+  .input-shell input::placeholder{ color:var(--text-faint); }
+  .icon-btn{ width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--text-muted); flex-shrink:0; }
+  .send-btn{ width:36px; height:36px; border-radius:50%; background:linear-gradient(160deg, var(--gold-soft), var(--gold)); display:flex; align-items:center; justify-content:center; color:#0A0D16; flex-shrink:0; box-shadow:0 4px 14px rgba(201,162,75,0.25); }
+
+  /* Memory screen */
+  .memory-scroll{ flex:1; overflow-y:auto; padding:18px 18px 12px; }
+  .mem-intro{ font-size:13px; color:var(--text-muted); line-height:1.6; margin-bottom:20px; }
+  .mem-group{ margin-bottom:22px; }
+  .mem-group-title{ font-family:'Fraunces',serif; font-size:15px; color:var(--gold-soft); margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+  .mem-card{ background:var(--surface); border:1px solid var(--hairline); border-radius:14px; padding:13px 15px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+  .mem-card .txt{ font-size:13.5px; color:var(--text-primary); line-height:1.5; }
+  .mem-card .txt .label{ display:block; font-size:11px; color:var(--text-faint); margin-bottom:3px; letter-spacing:0.02em; }
+  .mem-card .kebab{ color:var(--text-faint); flex-shrink:0; padding:2px; }
+  .search-bar{ display:flex; align-items:center; gap:8px; background:var(--surface); border:1px solid var(--hairline); border-radius:14px; padding:10px 14px; margin-bottom:18px; color:var(--text-faint); font-size:13.5px; }
+
+  /* Settings screen */
+  .settings-scroll{ flex:1; overflow-y:auto; padding:18px 18px 12px; }
+  .set-profile{ display:flex; align-items:center; gap:13px; padding:6px 4px 22px; border-bottom:1px solid var(--hairline); margin-bottom:18px; }
+  .set-profile .avatar-ring{ width:52px; height:52px; font-size:21px; }
+  .set-profile .who .who-name{ font-family:'Fraunces',serif; font-size:17px; color:var(--text-primary); }
+  .set-profile .who .who-sub{ font-size:12.5px; color:var(--text-muted); margin-top:2px; }
+  .set-group-title{ font-size:11px; color:var(--text-faint); letter-spacing:0.06em; text-transform:uppercase; margin:18px 4px 8px; }
+  .set-group-title:first-of-type{ margin-top:0; }
+  .set-list{ background:var(--surface); border:1px solid var(--hairline); border-radius:14px; overflow:hidden; }
+  .set-row{ display:flex; align-items:center; gap:12px; padding:13px 15px; border-bottom:1px solid var(--hairline); }
+  .set-row:last-child{ border-bottom:none; }
+  .set-row .ic{ width:30px; height:30px; border-radius:9px; background:var(--gold-dim); display:flex; align-items:center; justify-content:center; color:var(--gold-soft); flex-shrink:0; }
+  .set-row .txt{ flex:1; font-size:14px; color:var(--text-primary); }
+  .set-row .txt .sub{ font-size:11.5px; color:var(--text-muted); margin-top:1px; }
+  .set-row .val{ font-size:13px; color:var(--text-muted); }
+  .toggle{ width:38px; height:22px; border-radius:12px; background:var(--surface-raised); border:1px solid var(--hairline); position:relative; flex-shrink:0; }
+  .toggle.on{ background:rgba(201,162,75,0.28); border-color:var(--gold); }
+  .toggle .knob{ width:16px; height:16px; border-radius:50%; background:var(--text-faint); position:absolute; top:2px; left:2px; }
+  .toggle.on .knob{ background:var(--gold-soft); left:auto; right:2px; }
+
+  /* Bottom nav */
+  .bottom-nav{ flex-shrink:0; display:flex; padding:10px 8px 22px; background:var(--void); border-top:1px solid var(--hairline); }
+  .nav-item{ flex:1; display:flex; flex-direction:column; align-items:center; gap:5px; color:var(--text-faint); background:none; border:none; font-family:inherit; cursor:pointer; }
+  .nav-item.active{ color:var(--gold-soft); }
+  .nav-item span{ font-size:11px; font-weight:500; letter-spacing:0.01em; }
+  .nav-dot{ width:4px; height:4px; border-radius:50%; background:var(--gold-soft); margin-top:1px; visibility:hidden; }
+  .nav-item.active .nav-dot{ visibility:visible; }
+
+  ::-webkit-scrollbar{ width:0; height:0; }
+</style>
+</head>
+<body>
+
+<div class="caption">Tipu — full static mockup (Chat / Memory / Settings) · no backend wired</div>
+
+<div class="device">
+
+  <div class="status-bar">
+    <span>9:28</span>
+    <div class="icons">
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="none"><path d="M1 8L15 8M3 4L13 4M5 1L11 1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      <svg width="18" height="11" viewBox="0 0 18 11" fill="none"><rect x="1" y="1" width="14" height="9" rx="1.5" stroke="currentColor" stroke-width="1"/><rect x="2.5" y="2.5" width="9" height="6" fill="currentColor"/><rect x="16" y="3.5" width="1.5" height="3" fill="currentColor"/></svg>
+    </div>
+  </div>
+
+  <div class="app-header" id="header-chat">
+    <div class="avatar-ring">T</div>
+    <div class="header-text">
+      <div class="name">Tipu</div>
+      <div class="status"><span class="status-dot"></span>Active · tracking your day</div>
+    </div>
+    <div class="header-action">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M12 8v5l3 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+    </div>
+  </div>
+
+  <div class="app-header" id="header-memory" style="display:none;">
+    <div class="header-text">
+      <div class="name">Memory</div>
+      <div class="status">What Tipu has learned about you</div>
+    </div>
+  </div>
+
+  <div class="app-header" id="header-settings" style="display:none;">
+    <div class="header-text">
+      <div class="name">Settings</div>
+      <div class="status">Your account &amp; preferences</div>
+    </div>
+  </div>
+
+  <!-- ===== CHAT SCREEN ===== -->
+  <div class="screen active" id="screen-chat">
+    <div class="chat">
+      <div class="day-divider">Today</div>
+
+      <div class="row from-user"><div class="bubble"><p>Today I paid the phone and internet bill — 210 AED. Had 2 beers and dinner.</p></div></div>
+      <div class="timestamp" style="text-align:right; padding-right:4px;">7:06 PM</div>
+
+      <div class="row from-tipu"><div class="bubble-avatar">T</div><div class="bubble"><p>Got it — logged. What did the beers and dinner come to?</p></div></div>
+
+      <div class="row from-user"><div class="bubble"><p>Beer was 5 AED × 2. Dinner was 10 AED.</p></div></div>
+      <div class="timestamp" style="text-align:right; padding-right:4px;">8:56 PM</div>
+
+      <div class="row from-tipu">
+        <div class="bubble-avatar">T</div>
+        <div class="bubble" style="max-width:88%;">
+          <h4>Today's spending</h4>
+          <table class="ledger">
+            <tr><td>Phone &amp; internet bill</td><td>210</td></tr>
+            <tr><td>Beer (5 AED × 2)</td><td>10</td></tr>
+            <tr><td>Dinner</td><td>10</td></tr>
+            <tr class="total"><td>Spent today</td><td>230 AED</td></tr>
+          </table>
+          <p>You've got <strong>460 AED</strong> left for the rest of the month.</p>
+        </div>
+      </div>
+      <div class="timestamp">8:56 PM</div>
+
+      <div class="row from-user"><div class="bubble"><p>How many beers have I had this month so far?</p></div></div>
+      <div class="timestamp" style="text-align:right; padding-right:4px;">9:12 PM</div>
+
+      <div class="row from-tipu"><div class="bubble-avatar">T</div><div class="bubble"><p>You've had <strong>2 beers</strong> so far this month.</p></div></div>
+      <div class="timestamp">9:12 PM</div>
+
+      <div class="suggestion-row">
+        <div class="suggestion-chip">Show this week's spending</div>
+        <div class="suggestion-chip">Remind me tomorrow</div>
+        <div class="suggestion-chip">What do you know about me?</div>
+      </div>
+    </div>
+
+    <div class="input-bar">
+      <div class="input-shell">
+        <input type="text" placeholder="Message Tipu…" />
+        <div class="icon-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 15a3 3 0 003-3V6a3 3 0 10-6 0v6a3 3 0 003 3z" stroke="currentColor" stroke-width="1.6"/><path d="M19 11a7 7 0 01-14 0M12 18v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        </div>
+        <div class="send-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 12L20 4L14 20L11 13L4 12Z" fill="currentColor"/></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MEMORY SCREEN ===== -->
+  <div class="screen" id="screen-memory">
+    <div class="memory-scroll">
+      <div class="search-bar">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8"/><path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        Search what Tipu remembers…
+      </div>
+
+      <p class="mem-intro">Everything below is something you told Tipu directly. Nothing here was guessed — you can edit or remove any of it.</p>
+
+      <div class="mem-group">
+        <div class="mem-group-title">Profile</div>
+        <div class="mem-card"><div class="txt"><span class="label">Role</span>Operations Coordinator, Transguard Group — Dubai</div><div class="kebab">⋮</div></div>
+        <div class="mem-card"><div class="txt"><span class="label">Household</span>Married, sends money home monthly</div><div class="kebab">⋮</div></div>
+      </div>
+
+      <div class="mem-group">
+        <div class="mem-group-title">Finances</div>
+        <div class="mem-card"><div class="txt"><span class="label">Recurring</span>Phone &amp; internet bill — 210 AED / month</div><div class="kebab">⋮</div></div>
+        <div class="mem-card"><div class="txt"><span class="label">Habit</span>Occasional evening beer, usually 1–2</div><div class="kebab">⋮</div></div>
+      </div>
+
+      <div class="mem-group">
+        <div class="mem-group-title">Habits &amp; routine</div>
+        <div class="mem-card"><div class="txt"><span class="label">Noted Sep 8</span>Logs expenses same evening, likes a running monthly total</div><div class="kebab">⋮</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SETTINGS SCREEN ===== -->
+  <div class="screen" id="screen-settings">
+    <div class="settings-scroll">
+      <div class="set-profile">
+        <div class="avatar-ring">R</div>
+        <div class="who">
+          <div class="who-name">Ragib</div>
+          <div class="who-sub">ragibshr@gmail.com</div>
+        </div>
+      </div>
+
+      <div class="set-group-title">Preferences</div>
+      <div class="set-list">
+        <div class="set-row">
+          <div class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 5h16M4 12h10M4 19h13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+          <div class="txt">Reply language<div class="sub">Always respond in Bengali</div></div>
+          <div class="val">বাংলা</div>
+        </div>
+        <div class="set-row">
+          <div class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M21 12.8A9 9 0 1111.2 3 7 7 0 0021 12.8z" stroke="currentColor" stroke-width="1.6"/></svg></div>
+          <div class="txt">Dark theme<div class="sub">Matches this look everywhere</div></div>
+          <div class="toggle on"><div class="knob"></div></div>
+        </div>
+        <div class="set-row">
+          <div class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 01-3.4 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+          <div class="txt">Daily check-in reminder<div class="sub">9:00 PM</div></div>
+          <div class="toggle on"><div class="knob"></div></div>
+        </div>
+      </div>
+
+      <div class="set-group-title">Memory &amp; data</div>
+      <div class="set-list">
+        <div class="set-row">
+          <div class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 3a9 9 0 100 18 9 9 0 000-18z" stroke="currentColor" stroke-width="1.6"/><path d="M12 7v5l3.5 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+          <div class="txt">Manage memory<div class="sub">View, edit, or clear what Tipu knows</div></div>
+          <div class="val">›</div>
+        </div>
+        <div class="set-row">
+          <div class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 3v13m0 0l-4-4m4 4l4-4M4 19h16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="txt">Export my data<div class="sub">Download everything as JSON</div></div>
+          <div class="val">›</div>
+        </div>
+      </div>
+
+      <div class="set-group-title">Account</div>
+      <div class="set-list">
+        <div class="set-row">
+          <div class="ic" style="background:rgba(184,101,79,0.16); color:var(--danger);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M9 6V4a2 2 0 012-2h2a2 2 0 012 2v2M4 6h16M6 6l1 14a2 2 0 002 2h6a2 2 0 002-2l1-14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+          <div class="txt" style="color:var(--danger);">Clear all data</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <button class="nav-item active" data-screen="chat">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 5h16v11H8l-4 4V5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+      <span>Chat</span><div class="nav-dot"></div>
+    </button>
+    <button class="nav-item" data-screen="memory">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 3a9 9 0 100 18 9 9 0 000-18z" stroke="currentColor" stroke-width="1.6"/><path d="M12 7v5l3.5 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <span>Memory</span><div class="nav-dot"></div>
+    </button>
+    <button class="nav-item" data-screen="settings">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="2.6" stroke="currentColor" stroke-width="1.6"/><path d="M12 3.5v2M12 18.5v2M3.5 12h2M18.5 12h2M6 6l1.4 1.4M16.6 16.6L18 18M6 18l1.4-1.4M16.6 7.4L18 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <span>Settings</span><div class="nav-dot"></div>
+    </button>
+  </div>
+
+</div>
+
+<script>
+  const navItems = document.querySelectorAll('.nav-item');
+  const screens = { chat: document.getElementById('screen-chat'), memory: document.getElementById('screen-memory'), settings: document.getElementById('screen-settings') };
+  const headers = { chat: document.getElementById('header-chat'), memory: document.getElementById('header-memory'), settings: document.getElementById('header-settings') };
+
+  navItems.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.screen;
+      navItems.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      Object.keys(screens).forEach(key => {
+        screens[key].classList.toggle('active', key === target);
+        headers[key].style.display = key === target ? 'flex' : 'none';
+      });
+    });
+  });
+
+  document.querySelectorAll('.toggle').forEach(t => {
+    t.addEventListener('click', () => t.classList.toggle('on'));
+  });
+</script>
+
+</body>
+</html>

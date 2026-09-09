@@ -4,11 +4,10 @@ import { useAuth } from '../context/AuthContext';
 function FloatingOrbs() {
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-      <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-primary/20 blur-[120px] animate-float" />
-      <div className="absolute top-1/3 -right-24 w-80 h-80 rounded-full bg-purple-500/15 blur-[100px] animate-float-reverse" />
-      <div className="absolute -bottom-20 left-1/4 w-72 h-72 rounded-full bg-indigo-400/10 blur-[80px] animate-float-slow" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full border border-primary/5 animate-spin-slow" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full border border-purple-400/5 animate-spin-slow" style={{ animationDirection: 'reverse', animationDuration: '30s' }} />
+      <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-primary/15 blur-[120px] animate-float" />
+      <div className="absolute top-1/3 -right-24 w-80 h-80 rounded-full bg-gold-soft/8 blur-[100px] animate-float-reverse" />
+      <div className="absolute -bottom-20 left-1/4 w-72 h-72 rounded-full bg-primary/6 blur-[80px] animate-float-slow" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full border border-hairline animate-spin-slow" />
     </div>
   );
 }
@@ -58,10 +57,16 @@ export function Login() {
 
       <div className="w-full max-w-sm relative z-10 animate-scale-in">
         <div className="text-center mb-8 animate-slide-down">
-          <div className="inline-flex items-center justify-center w-20 h-20 mb-5 rounded-2xl bg-primary-gradient text-white text-3xl font-bold shadow-glow animate-glow-pulse" style={{ transformStyle: 'preserve-3d' }}>
+          <div className="inline-flex items-center justify-center w-20 h-20 mb-5 rounded-full text-[#0A0D16] text-3xl font-bold shadow-glow animate-glow-pulse"
+            style={{
+              background: 'radial-gradient(circle at 30% 25%, #E8CE8C, #C9A24B 60%, #8a6b28 100%)',
+              fontFamily: 'var(--font-serif)',
+              transformStyle: 'preserve-3d',
+            }}
+          >
             T
           </div>
-          <h1 className="text-4xl font-bold text-gradient mb-1">Tipu</h1>
+          <h1 className="text-4xl font-bold text-gradient mb-1" style={{ fontFamily: 'var(--font-serif)' }}>Tipu</h1>
           <p className="text-text-muted text-sm">Your personal AI companion</p>
         </div>
 
@@ -90,7 +95,7 @@ export function Login() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoComplete="email"
-                className="w-full px-4 py-3 text-text bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-smooth placeholder:text-text-dim text-sm"
+                className="w-full px-4 py-3 text-text bg-white/5 border border-hairline rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-smooth placeholder:text-text-dim text-sm"
                 placeholder="you@example.com"
                 disabled={loading}
               />
@@ -107,7 +112,7 @@ export function Login() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 autoComplete={isSignUp ? 'new-password' : 'current-password'}
-                className="w-full px-4 py-3 text-text bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-smooth placeholder:text-text-dim text-sm"
+                className="w-full px-4 py-3 text-text bg-white/5 border border-hairline rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-smooth placeholder:text-text-dim text-sm"
                 placeholder="••••••••"
                 disabled={loading}
               />
@@ -117,11 +122,11 @@ export function Login() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3.5 px-6 bg-primary-gradient text-white font-semibold rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 focus:ring-offset-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-smooth shadow-glow hover:shadow-[0_0_40px_rgba(99,102,241,0.5)] active:scale-[0.98]"
+                className="w-full py-3.5 px-6 bg-primary-gradient text-[#0A0D16] font-semibold rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 focus:ring-offset-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-smooth shadow-glow hover:shadow-[0_0_40px_rgba(201,162,75,0.4)] active:scale-[0.98]"
               >
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">
-                    <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span className="w-5 h-5 border-2 border-[#0A0D16] border-t-transparent rounded-full animate-spin" />
                     Please wait...
                   </span>
                 ) : (

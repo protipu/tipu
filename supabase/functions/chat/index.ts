@@ -10,7 +10,7 @@ if (!SB_KEY) console.error('Missing SUPABASE_SERVICE_ROLE_KEY');
 
 const ok = !!(GROQ_KEY && SB_URL && SB_KEY);
 
-const ALLOW = ['https://tipu.vercel.app', 'https://tipu-pearl.vercel.app', 'http://localhost:5173', 'http://localhost:4173'];
+const ALLOW = ['https://tipu.vercel.app', 'https://tipu-pearl.vercel.app', 'https://tipu.mithebangla.store', 'http://localhost:5173', 'http://localhost:4173'];
 
 function hdrs(origin: string | null) {
   const o = origin && ALLOW.includes(origin) ? origin : ALLOW[0];
@@ -24,8 +24,6 @@ function hdrs(origin: string | null) {
 function j(h: Record<string, string>, b: unknown, s = 200) {
   return new Response(JSON.stringify(b), { status: s, headers: { ...h, 'Content-Type': 'application/json' } });
 }
-
-function stripFences(t: string) { return t.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim(); }
 
 async function auth(req: Request, h: Record<string, string>) {
   const sb = createClient(SB_URL!, SB_KEY!);
@@ -123,11 +121,44 @@ Deno.serve(async (req) => {
         .select('fact, category, importance').eq('user_id', user!.id).eq('status', 'active')
         .order('importance', { ascending: false }).limit(15);
 
+      // Read language preference from memory_facts
+      const { data: langPrefs } = await sb.from('memory_facts')
+        .select('fact').eq('user_id', user!.id).eq('category', 'preference')
+        .eq('status', 'active').ilike('fact', '%language%').limit(3);
+
+      let langName = '';
+      if (langPrefs && langPrefs.length > 0) {
+        const fact = langPrefs[0].fact.toLowerCase();
+        const langs: Record<string, string> = {
+          bengali: 'Bengali', bangla: 'Bengali', 'বাংলা': 'Bengali',
+          spanish: 'Spanish', french: 'French', arabic: 'Arabic',
+          hindi: 'Hindi', urdu: 'Urdu', chinese: 'Chinese',
+          japanese: 'Japanese', korean: 'Korean', portuguese: 'Portuguese',
+        };
+        for (const [key, val] of Object.entries(langs)) {
+          if (fact.includes(key)) { langName = val; break; }
+        }
+      }
+
       const memText = (mems || []).length > 0
-        ? '\n\nKnown facts:\n' + (mems as Array<{ fact: string; category: string; importance: number }>).map(m => `- [${m.category}] ${m.fact}`).join('\n')
+        ? '\n\nKnown facts about the user:\n' + (mems as Array<{ fact: string; category: string; importance: number }>).map(m => `- [${m.category}] ${m.fact}`).join('\n')
         : '';
 
-      const sysPrompt = `You are Tipu, a personal AI companion. Warm, friendly, conversational. Keep responses concise (2-3 sentences). Don't over-explain. Use casual language.${memText}`;
+      const langInstruction = langName
+        ? `\n\nIMPORTANT: The user prefers ${langName}. Respond in ${langName} when they write in ${langName} or when it's clearly their preference.`
+        : '';
+
+      const sysPrompt = `You are Tipu — a warm, friendly AI companion, like a close friend who genuinely cares.
+
+Rules:
+- Be concise. Reply like a person texting, not a document. A few sentences by default. Only go longer if the user explicitly asks for a breakdown, list, or structured data.
+- Don't recap the conversation or summarize what they said. Just respond naturally to what they asked.
+- Don't re-explain or re-calculate everything from scratch on every reply. Reference past context silently to stay accurate, but don't restate the whole history.
+- Use markdown ONLY for genuinely tabular data (spending ledgers, comparisons). Most replies should be plain conversational text — no headings, no bullet-point recaps for simple questions.
+- Match the user's energy: casual if they're casual, serious if they're serious.
+- Never end with generic closings like "How can I help?" — just end naturally.
+- When the user mentions expenses, amounts, or quantities, keep your reply short and direct. "You've had 2 beers this month" not "Here's everything we've discussed about your drinking habits..."
+${langInstruction}${memText}`;
 
       const msgs = [
         { role: 'system', content: sysPrompt },
@@ -147,8 +178,14 @@ Deno.serve(async (req) => {
       clearTimeout(tid);
 
       if (!gr.ok) {
+        if (gr.status === 429) {
+          return j(h, {
+            error: 'Tipu is a bit busy right now. Try again in a moment!',
+            rateLimited: true,
+          }, 429);
+        }
         const e = await gr.json().catch(() => ({}));
-        throw new Error(`Groq ${gr.status}`);
+        throw new Error(`Groq ${gr.status}: ${JSON.stringify(e)}`);
       }
 
       const d = await gr.json();

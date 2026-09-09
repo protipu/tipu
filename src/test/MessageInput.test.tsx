@@ -6,7 +6,7 @@ import { MessageInput } from '../components/chat/MessageInput';
 describe('MessageInput', () => {
   it('renders with default placeholder', () => {
     render(<MessageInput onSend={vi.fn()} />);
-    expect(screen.getByPlaceholderText('Type a message...')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Message Tipu...')).toBeInTheDocument();
   });
 
   it('renders with custom placeholder', () => {
@@ -18,7 +18,7 @@ describe('MessageInput', () => {
     const onSend = vi.fn();
     render(<MessageInput onSend={onSend} />);
     
-    const input = screen.getByPlaceholderText('Type a message...');
+    const input = screen.getByPlaceholderText('Message Tipu...');
     fireEvent.change(input, { target: { value: 'Hello' } });
     fireEvent.submit(input.closest('form')!);
     
@@ -29,7 +29,7 @@ describe('MessageInput', () => {
     const onSend = vi.fn();
     render(<MessageInput onSend={onSend} />);
     
-    const input = screen.getByPlaceholderText('Type a message...');
+    const input = screen.getByPlaceholderText('Message Tipu...');
     fireEvent.change(input, { target: { value: '   ' } });
     fireEvent.submit(input.closest('form')!);
     
@@ -38,6 +38,6 @@ describe('MessageInput', () => {
 
   it('disables input when disabled prop is true', () => {
     render(<MessageInput onSend={vi.fn()} disabled={true} />);
-    expect(screen.getByPlaceholderText('Type a message...')).toBeDisabled();
+    expect(screen.getByPlaceholderText('Message Tipu...')).toBeDisabled();
   });
 });

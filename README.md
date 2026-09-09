@@ -10,11 +10,13 @@ Tipu is a single-user chat interface that:
 - Uses stored context to give increasingly personal, relevant replies over time
 - Remembers with categories, importance levels, and confidence scores
 - Deduplicates and supersedes outdated memories automatically
+- Renders AI replies with proper markdown (tables, bold, headings)
 
 ## Tech Stack
 
 - **Frontend**: React 19 + Vite + TypeScript (strict mode)
-- **Styling**: Tailwind CSS v4 (dark companion theme with glass morphism, 3D effects, animations)
+- **Styling**: Tailwind CSS v4 (dark-void + gold cinematic theme, Fraunces + Inter fonts)
+- **Markdown**: react-markdown + remark-gfm for AI message rendering
 - **State**: React Context + built-in hooks only
 - **Backend**: Supabase (Postgres, Auth, Edge Functions)
 - **AI**: Groq API (`groq/compound` model) via Supabase Edge Functions
@@ -56,9 +58,9 @@ create table memory_facts (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users not null,
   fact text not null,
-  category text default 'general',       -- personal, preference, work, people, etc.
-  importance smallint default 50,         -- 1-100: how important to know
-  confidence smallint default 80,         -- 1-100: how sure is the AI
+  category text default 'general',
+  importance smallint default 50,
+  confidence smallint default 80,
   status text default 'active' check (status in ('active', 'archived', 'superseded')),
   source_message_id uuid references messages(id) on delete set null,
   superseded_by uuid references memory_facts(id) on delete set null,
@@ -68,7 +70,6 @@ create table memory_facts (
   check (confidence >= 0 and confidence <= 100)
 );
 
--- Indexes for performance
 create index idx_memory_facts_user_status on memory_facts(user_id, status);
 create index idx_memory_facts_user_category on memory_facts(user_id, category);
 create index idx_memory_facts_importance on memory_facts(importance desc);
@@ -88,7 +89,8 @@ create index idx_memory_facts_importance on memory_facts(importance desc);
 | 7 | ✅ | Security hardening, UX improvements, testing, CI/CD |
 | Phase 2 | ✅ | Foundation fixes — delete, CORS, timestamps, pagination, dead code |
 | Phase 3 | ✅ | **Memory 2.0** — enhanced memory with categories, importance, confidence, dedup |
-| Phase 4 | ✅ | **UI Redesign** — dark companion theme, glass morphism, 3D card effects, animations |
+| Phase 4 | ✅ | **UI Redesign** — dark companion theme, glass morphism, 3D card effects |
+| Phase 5 | ✅ | **Gold Cinematic UI** — dark-void theme, Fraunces/Inter fonts, ledger tables, markdown rendering |
 
 ## What's Implemented
 
@@ -99,12 +101,20 @@ create index idx_memory_facts_importance on memory_facts(importance desc);
 - **Status system**: Active, Archived, Superseded
 - **Deduplication**: Similar memories detected and merged
 - **Superseding**: Outdated memories replaced with updated versions
-- **Memory UI**: Full-featured memory page with category filters, edit, delete, archive
+- **Memory UI**: Full-featured memory page with category filters, search bar, edit, delete, archive
 - **Auto-extraction**: AI extracts 0-3 facts per conversation turn
 - **Rich system prompt**: AI receives top memories by importance with category context
 
+### AI Response Quality
+- **Concise replies**: System prompt enforces 2-3 sentence default, longer only for structured data
+- **No unnecessary recapping**: AI doesn't restate conversation history on every message
+- **Markdown rendering**: Tables, bold, headings rendered properly via react-markdown + remark-gfm
+- **Ledger-style tables**: Spending breakdowns display as clean tabular data
+- **Language preference**: Reads Bengali/other language preference from memory_facts and passes to Groq
+- **429 rate limit handling**: Friendly "Tipu is busy" message instead of raw error
+
 ### Security
-- CORS restricted to `tipu.vercel.app` + `tipu-pearl.vercel.app` + localhost (explicit allowlist)
+- CORS restricted to `tipu.vercel.app` + `tipu-pearl.vercel.app` + `tipu.mithebangla.store` + localhost
 - Environment variable validation at Edge Function startup
 - Service role key with manual JWT verification
 - Input validation (max 4000 chars per message)
@@ -117,8 +127,8 @@ create index idx_memory_facts_importance on memory_facts(importance desc);
 - **Message history**: Load older messages with pagination
 - **Loading skeleton**: Skeleton placeholders while history loads
 - **Error boundary**: Graceful error handling with retry/reload options
-- **Memory page**: Browse, filter, edit, delete, archive memories
-- **Category filters**: Quick filter by memory category with counts
+- **Memory page**: Browse, filter, search, edit, delete, archive memories
+- **Settings page**: Profile, preferences (language, dark theme, check-in reminder), memory/data actions, account
 
 ### Code Quality
 - **TypeScript strict mode**: Full type safety
@@ -128,16 +138,19 @@ create index idx_memory_facts_importance on memory_facts(importance desc);
 ### DevOps
 - **GitHub Actions**: Auto-deploy to Vercel on push to `main`
 - **Edge Function deploy**: Separate workflow for Supabase functions
-- **Keep-alive**: Pings Supabase every 6 hours to prevent free-tier pause
 
 ### UI/UX
-- **Dark companion theme**: Deep gradient backgrounds with indigo/purple accent palette
+- **Dark-void + gold cinematic theme**: `#0A0D16` background, `#C9A24B` gold accents
+- **Typography**: Fraunces (serif) for headings, Inter (sans-serif) for body text
+- **Gold-tinted user bubbles**: Right-aligned with subtle gold background
+- **Tipu avatar ring**: Radial gradient gold circle with "T" initial
+- **Ledger-style tables**: Clean tabular data display for spending breakdowns
 - **Glass morphism**: Frosted glass effects on headers, nav, cards, and input bars
-- **3D card effects**: Interactive tilt on hover for message bubbles and memory cards (perspective + rotation)
+- **3D card effects**: Interactive tilt on hover for message bubbles and memory cards
 - **Animated orbs**: Floating background orbs with slow drift animations
 - **Smooth animations**: Entrance slide-ups, scale-ins, fade-ins, wave typing indicator
-- **Glow effects**: Pulsing glow on logo, send button, and active nav items
-- **Bottom navigation**: Message, Memory, Settings tabs with animated active indicator
+- **Bottom navigation**: Chat, Memory, Settings tabs with gold active dot indicator
+- **Suggestion chips**: Quick-reply suggestions on empty chat
 - **PWA manifest**: Installable as Progressive Web App
 - **Open Graph tags**: Social sharing previews
 
@@ -168,8 +181,8 @@ npm run lint
 
 ## Deployment
 
-- **Vercel**: Auto-deploys on push to `main` via GitHub Actions (`.github/workflows/deploy.yml`)
-- **Edge Functions**: Deploy via GitHub Actions (`.github/workflows/deploy-functions.yml`)
+- **Vercel**: Auto-deploys on push to `main` via GitHub Actions
+- **Edge Functions**: Deploy via GitHub Actions or `npx supabase functions deploy chat`
 - **Environment variables** (set in Vercel dashboard):
   - `VITE_SUPABASE_URL`
   - `VITE_SUPABASE_ANON_KEY`
@@ -178,29 +191,24 @@ npm run lint
   - `SUPABASE_SERVICE_ROLE_KEY`
   - `SUPABASE_URL`
 
+## Design Reference
+
+The full static mockup is at `design/tipu-app-full.html` — a self-contained HTML file with all CSS inline, showing the Chat, Memory, and Settings screens with the gold cinematic theme.
+
 ## Android APK Build
 
 ```bash
-# Build web assets
 npm run build
-
-# Sync to Android
 npx cap sync android
-
-# Open in Android Studio (for building APK)
 npx cap open android
-
-# Or build APK from command line (requires Android SDK)
-cd android && ./gradlew assembleDebug
-# APK output: android/app/build/outputs/apk/debug/app-debug.apk
+# Or: cd android && ./gradlew assembleDebug
 ```
 
 ## Security
 
-- Groq API key **never** reaches the browser — all AI calls happen server-side in Supabase Edge Functions
+- Groq API key **never** reaches the browser — all AI calls happen server-side
 - CORS restricted to explicit allowlist only
 - Environment variables validated at startup
-- No runtime settings screen for API keys — credentials baked in at deploy time
 - Row Level Security ensures users only access their own data
 - Foreign key cascade protection on memory deletions
 
