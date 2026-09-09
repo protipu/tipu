@@ -45,9 +45,12 @@ export function Chat() {
     loadHistory();
   }, []);
 
+  const PAGE_SIZE = 20;
+
   const loadHistory = async (offset = 0) => {
     try {
-      const { data, error } = await supabase.functions.invoke('chat', {
+      const params = `offset=${offset}&limit=${PAGE_SIZE}`;
+      const { data, error } = await supabase.functions.invoke(`chat?${params}`, {
         method: 'GET',
       });
 
