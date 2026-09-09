@@ -28,11 +28,11 @@ Tipu is a single-user chat interface that:
 ## Architecture
 
 ```
-┌─────────────┐     ┌──────────────────┐     ┌─────────────┐
-│   Browser   │────▶│  Supabase Edge   │────▶│   Groq API  │
-│   (React)   │     │  Function: chat  │     │   (Llama)   │
-└─────────────┘     └──────────────────┘     └─────────────┘
-       │                    │
+┌─────────────┐     ┌──────────────────┐     ┌─────────────────┐
+│   Browser   │────▶│  Supabase Edge   │────▶│   Groq API      │
+│   (React)   │     │  Function: chat  │     │  - compound     │
+└─────────────┘     └──────────────────┘     │  - llama-3.3-70b│
+       │                    │                └─────────────────┘
        │                    ▼
        │            ┌──────────────────┐
        └───────────▶│   Supabase DB    │
@@ -91,27 +91,37 @@ create index idx_memory_facts_importance on memory_facts(importance desc);
 | Phase 3 | ✅ | **Memory 2.0** — enhanced memory with categories, importance, confidence, dedup |
 | Phase 4 | ✅ | **UI Redesign** — dark companion theme, glass morphism, 3D card effects |
 | Phase 5 | ✅ | **Gold Cinematic UI** — dark-void theme, Fraunces/Inter fonts, ledger tables, markdown rendering |
+| Phase A | ✅ | Fix MemoryPage — send `?section=memories` to Edge Function GET handler |
+| Phase B | ✅ | Fix chat pagination — send `offset`/`limit` params, load more button |
+| Phase C | ✅ | Fix MemoryPage/MemoryCard — replace broken CSS classes with inline hex values |
+| Phase D | ✅ | **Memory extraction** — Groq Llama extracts durable facts after each chat message |
+| Phase E | ✅ | **Deduplication** — skip >90% similar, supersede >60% same category |
+| Phase F | ✅ | **Relevance retrieval** — keyword matching selects top 5 memories per message |
+| Phase G | ✅ | **Memory creation UI** — FAB button, create modal with category/importance |
+| Phase H | ✅ | Align Login/Settings with flat theme — inline hex values |
 
 ## What's Implemented
 
 ### Memory 2.0
-- **10 categories**: Personal, Preference, Work, People, Relationship, Goal, Project, Event, Habit, Health
+- **11 categories**: Personal, Preference, Work, People, Relationship, Goal, Project, Event, Habit, Health, General
 - **Importance scoring**: 1-100 scale, memories sorted by importance
 - **Confidence scoring**: 1-100 scale, low-confidence facts skipped
 - **Status system**: Active, Archived, Superseded
-- **Deduplication**: Similar memories detected and merged
+- **Deduplication**: >90% similar memories skipped, >60% same category superseded
 - **Superseding**: Outdated memories replaced with updated versions
-- **Memory UI**: Full-featured memory page with category filters, search bar, edit, delete, archive
-- **Auto-extraction**: AI extracts 0-3 facts per conversation turn
-- **Rich system prompt**: AI receives top memories by importance with category context
+- **Memory UI**: Full-featured memory page with category filters, search bar, edit, delete, archive, create
+- **Auto-extraction**: Groq Llama 3.3 70B extracts durable facts after each chat message
+- **Relevance retrieval**: Keyword matching selects top 5 most relevant memories per message
+- **Create memories manually**: FAB button with category selector and importance slider
 
 ### AI Response Quality
-- **Concise replies**: System prompt enforces 2-3 sentence default, longer only for structured data
+- **Concise replies**: System prompt enforces 1-3 sentence default
 - **No unnecessary recapping**: AI doesn't restate conversation history on every message
 - **Markdown rendering**: Tables, bold, headings rendered properly via react-markdown + remark-gfm
 - **Ledger-style tables**: Spending breakdowns display as clean tabular data
 - **Language preference**: Reads Bengali/other language preference from memory_facts and passes to Groq
 - **429 rate limit handling**: Friendly "Tipu is busy" message instead of raw error
+- **Dual-model architecture**: `groq/compound` for chat, `groq/llama-3.3-70b-versatile` for memory extraction
 
 ### Security
 - CORS restricted to `tipu.vercel.app` + `tipu-pearl.vercel.app` + `tipu.mithebangla.store` + localhost
