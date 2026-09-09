@@ -35,8 +35,8 @@ async function auth(req: Request, h: Record<string, string>) {
 }
 
 const EXTRACTION_CATEGORIES = [
-  'identity', 'background', 'relationships', 'work', 'health',
-  'interests', 'values', 'communication', 'preferences', 'projects', 'other',
+  'personal', 'preference', 'work', 'people', 'relationship',
+  'goal', 'project', 'event', 'habit', 'health', 'general',
 ];
 
 const EXTRACTION_PROMPT = `You are a memory extraction engine. Analyze the user's message for durable, specific facts.
@@ -48,7 +48,20 @@ Extract facts that are:
 - Directly stated by the user
 - NOT generic traits, opinions about AI, questions, or test messages
 
-Output: {"memories": [{"fact": "...", "category": "identity|background|relationships|work|health|interests|values|communication|preferences|projects|other", "importance": 50, "confidence": 50}]}
+Output: {"memories": [{"fact": "...", "category": "personal|preference|work|people|relationship|goal|project|event|habit|health|general", "importance": 50, "confidence": 50}]}
+
+Categories:
+- personal: Name, age, location, identity facts
+- preference: Likes, dislikes, communication style
+- work: Job, company, role, skills
+- people: Family, friends, colleagues (relationships with others)
+- relationship: How the user relates to Tipu
+- goal: Aspirations, targets, future plans
+- project: Current projects, active work
+- event: Past or upcoming events
+- habit: Routines, daily patterns
+- health: Physical or mental health info
+- general: Anything else worth remembering
 
 Importance (1-100):
 - 70+: Core identity (name, pronouns, gender)
@@ -286,6 +299,24 @@ Deno.serve(async (req) => {
         return j(h, { success: true });
       }
       return j(h, { error: 'messageId or memoryId required' }, 400);
+    }
+
+    // ── POST: create memory (manual) ────────────────────────────
+    if (req.method === 'POST' && body.fact) {
+      const fact = (body.fact as string).trim();
+      if (!fact) return j(h, { error: 'Empty fact' }, 400);
+      const category = (body.category as string) || 'other';
+      const importance = Math.max(0, Math.min(100, Math.round(body.importance as number || 50)));
+      const { data, error } = await sb.from('memory_facts').insert({
+        user_id: user!.id,
+        fact,
+        category,
+        importance,
+        confidence: 100,
+        status: 'active',
+      }).select().single();
+      if (error) throw error;
+      return j(h, { memory: data });
     }
 
     // ── POST: chat ──────────────────────────────────────────────
