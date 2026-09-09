@@ -177,6 +177,43 @@ function similarity(a: string, b: string): number {
   return matches / Math.max(wordsA.length, wordsB.length);
 }
 
+const STOP_WORDS = new Set(['the', 'a', 'an', 'is', 'are', 'was', 'were', 'be', 'been',
+  'being', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could',
+  'should', 'may', 'might', 'shall', 'can', 'to', 'of', 'in', 'for', 'on', 'with',
+  'at', 'by', 'from', 'as', 'into', 'through', 'during', 'before', 'after', 'above',
+  'below', 'between', 'out', 'off', 'over', 'under', 'again', 'further', 'then',
+  'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'both', 'each',
+  'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only',
+  'own', 'same', 'so', 'than', 'too', 'very', 'just', 'because', 'but', 'and',
+  'or', 'if', 'while', 'about', 'up', 'its', 'it', 'this', 'that', 'these',
+  'those', 'i', 'me', 'my', 'myself', 'we', 'our', 'you', 'your', 'he', 'him',
+  'his', 'she', 'her', 'they', 'them', 'what', 'which', 'who', 'whom']);
+
+function relevanceScore(memoryFact: string, userMessage: string): number {
+  const factWords = memoryFact.toLowerCase().split(/\s+/).filter(w => w.length > 2 && !STOP_WORDS.has(w));
+  const msgWords = new Set(userMessage.toLowerCase().split(/\s+/).filter(w => w.length > 2 && !STOP_WORDS.has(w)));
+
+  if (factWords.length === 0 || msgWords.size === 0) return 0;
+
+  let matches = 0;
+  for (const w of factWords) { if (msgWords.has(w)) matches++; }
+
+  const coverage = matches / factWords.length;
+  const density = matches / msgWords.size;
+  const baseScore = (coverage * 0.7 + density * 0.3);
+
+  // Boost for explicit mention patterns
+  const lowerFact = memoryFact.toLowerCase();
+  const lowerMsg = userMessage.toLowerCase();
+  let boost = 0;
+  if (lowerMsg.includes('name') && (lowerFact.includes('name') || lowerFact.includes('called'))) boost += 0.3;
+  if (lowerMsg.includes('where') && (lowerFact.includes('live') || lowerFact.includes('city') || lowerFact.includes('country'))) boost += 0.3;
+  if (lowerMsg.includes('work') && (lowerFact.includes('work') || lowerFact.includes('job') || lowerFact.includes('company'))) boost += 0.3;
+  if (lowerMsg.includes('family') && (lowerFact.includes('mother') || lowerFact.includes('father') || lowerFact.includes('sister') || lowerFact.includes('brother') || lowerFact.includes('wife') || lowerFact.includes('husband') || lowerFact.includes('child'))) boost += 0.3;
+
+  return Math.min(1, baseScore + boost);
+}
+
 Deno.serve(async (req) => {
   const h = hdrs(req.headers.get('Origin'));
   if (req.method === 'OPTIONS') return new Response('ok', { headers: h });
@@ -268,10 +305,19 @@ Deno.serve(async (req) => {
       if (!isGreeting && !isShort) {
         const { data: mems } = await sb.from('memory_facts')
           .select('fact, category, importance').eq('user_id', user!.id).eq('status', 'active')
-          .order('importance', { ascending: false }).limit(5);
+          .order('importance', { ascending: false }).limit(50);
+
         if (mems && mems.length > 0) {
-          memText = '\n\nPrivate notes (use only if directly relevant — never dump all of these):\n' +
-            (mems as Array<{ fact: string }>).map(m => m.fact).join('\n');
+          const scored = (mems as Array<{ fact: string; category: string; importance: number }>)
+            .map(m => ({ ...m, score: relevanceScore(m.fact, message) }))
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 5)
+            .filter(m => m.score > 0);
+
+          if (scored.length > 0) {
+            memText = '\n\nPrivate notes (use only if directly relevant — never dump all of these):\n' +
+              scored.map(m => m.fact).join('\n');
+          }
         }
       }
 
