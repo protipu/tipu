@@ -34,6 +34,149 @@ async function auth(req: Request, h: Record<string, string>) {
   return { sb, user, err: null };
 }
 
+const EXTRACTION_CATEGORIES = [
+  'identity', 'background', 'relationships', 'work', 'health',
+  'interests', 'values', 'communication', 'preferences', 'projects', 'other',
+];
+
+const EXTRACTION_PROMPT = `You are a memory extraction engine. Analyze the user's message for durable, specific facts.
+
+Return ONLY valid JSON — no markdown, no explanation.
+Extract facts that are:
+- Specific and verifiable (not generic like "is friendly")
+- Durable (won't change day-to-day)
+- Directly stated by the user
+- NOT generic traits, opinions about AI, questions, or test messages
+
+Output: {"memories": [{"fact": "...", "category": "identity|background|relationships|work|health|interests|values|communication|preferences|projects|other", "importance": 50, "confidence": 50}]}
+
+Importance (1-100):
+- 70+: Core identity (name, pronouns, gender)
+- 40-69: Stable facts (job, city, family)
+- 10-39: Preferences, projects, interests
+
+Confidence (1-100):
+- 90+: Explicitly stated ("My name is X")
+- 50-89: Strongly implied ("I work at X" = has job at X)
+- 10-49: Indirectly implied
+
+If nothing worth remembering, return: {"memories": []}`;
+
+async function extractAndSaveMemories(
+  sb: ReturnType<typeof createClient>,
+  userId: string,
+  userMessage: string,
+  userMsgId?: string,
+): Promise<void> {
+  try {
+    const extrCtrl = new AbortController();
+    const extrTid = setTimeout(() => extrCtrl.abort(), 10000);
+
+    const extrRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_KEY}` },
+      body: JSON.stringify({
+        model: 'groq/llama-3.3-70b-versatile',
+        messages: [
+          { role: 'system', content: EXTRACTION_PROMPT },
+          { role: 'user', content: userMessage },
+        ],
+        max_tokens: 512,
+        temperature: 0.1,
+        response_format: { type: 'json_object' },
+      }),
+      signal: extrCtrl.signal,
+    });
+    clearTimeout(extrTid);
+
+    if (!extrRes.ok) {
+      console.error('Extraction API error:', extrRes.status);
+      return;
+    }
+
+    const extrData = await extrRes.json();
+    const content = extrData?.choices?.[0]?.message?.content?.trim();
+    if (!content) return;
+
+    let parsed: { memories: Array<{ fact: string; category: string; importance: number; confidence: number }> };
+    try {
+      parsed = JSON.parse(content);
+    } catch {
+      console.error('Failed to parse extraction JSON:', content);
+      return;
+    }
+
+    if (!parsed.memories || !Array.isArray(parsed.memories) || parsed.memories.length === 0) return;
+
+    const toSave = parsed.memories
+      .filter(m => m.fact && EXTRACTION_CATEGORIES.includes(m.category))
+      .map(m => ({
+        user_id: userId,
+        fact: m.fact.trim(),
+        category: m.category,
+        importance: Math.max(0, Math.min(100, Math.round(m.importance || 50))),
+        confidence: Math.max(0, Math.min(100, Math.round(m.confidence || 50))),
+        source_message_id: userMsgId || null,
+        status: 'active',
+      }));
+
+    if (toSave.length === 0) return;
+
+    const deduped = await deduplicateMemories(sb, userId, toSave);
+    if (deduped.length > 0) {
+      const { error } = await sb.from('memory_facts').insert(deduped);
+      if (error) console.error('Memory insert error:', error.message);
+      else console.log(`Saved ${deduped.length} memories from ${toSave.length} extracted`);
+    }
+  } catch (err) {
+    console.error('extractAndSaveMemories error:', err instanceof Error ? err.message : err);
+  }
+}
+
+async function deduplicateMemories(
+  sb: ReturnType<typeof createClient>,
+  userId: string,
+  candidates: Array<{ user_id: string; fact: string; category: string; importance: number; confidence: number; source_message_id: string | null; status: string }>,
+): Promise<typeof candidates> {
+  const { data: existing } = await sb.from('memory_facts')
+    .select('id, fact, category, importance')
+    .eq('user_id', userId)
+    .eq('status', 'active');
+
+  if (!existing || existing.length === 0) return candidates;
+
+  const kept: typeof candidates = [];
+  for (const cand of candidates) {
+    let superseded = false;
+    for (const ex of existing) {
+      const sim = similarity(cand.fact.toLowerCase(), ex.fact.toLowerCase());
+      if (sim > 0.9) {
+        superseded = true;
+        break;
+      }
+      if (sim > 0.6 && cand.category === ex.category) {
+        if (cand.importance > ex.importance) {
+          await sb.from('memory_facts').update({ status: 'superseded' }).eq('id', ex.id);
+        } else {
+          superseded = true;
+          break;
+        }
+      }
+    }
+    if (!superseded) kept.push(cand);
+  }
+  return kept;
+}
+
+function similarity(a: string, b: string): number {
+  const wordsA = a.split(/\s+/);
+  const wordsB = b.split(/\s+/);
+  const setB = new Set(wordsB);
+  let matches = 0;
+  for (const w of wordsA) { if (setB.has(w)) matches++; }
+  return matches / Math.max(wordsA.length, wordsB.length);
+}
+
 Deno.serve(async (req) => {
   const h = hdrs(req.headers.get('Origin'));
   if (req.method === 'OPTIONS') return new Response('ok', { headers: h });
@@ -203,10 +346,17 @@ ${langInstruction}${memText ? '\n\nYour private notes about the user (NEVER read
 
       const t1 = new Date().toISOString();
       const t2 = new Date(Date.now() + 1000).toISOString();
-      await sb.from('messages').insert([
+      const { data: savedMsgs } = await sb.from('messages').insert([
         { user_id: user!.id, role: 'user', content: message, created_at: t1 },
         { user_id: user!.id, role: 'assistant', content: reply, created_at: t2 },
-      ]);
+      ]).select('id, role');
+
+      const userMsgId = savedMsgs?.[0]?.id;
+
+      // ── Memory extraction (background, non-blocking) ────────────
+      extractAndSaveMemories(sb, user!.id, message, userMsgId).catch(e =>
+        console.error('Memory extraction failed:', e instanceof Error ? e.message : e)
+      );
 
       return j(h, { reply });
     }
