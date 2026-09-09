@@ -8,8 +8,7 @@ interface MessageBubbleProps {
 }
 
 function formatTime(isoString: string): string {
-  const date = new Date(isoString);
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  return new Date(isoString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
 export function MessageBubble({ message, onDelete }: MessageBubbleProps) {
@@ -19,18 +18,13 @@ export function MessageBubble({ message, onDelete }: MessageBubbleProps) {
   if (!message.content && !message.retrying) return null;
 
   return (
-    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} group`}>
-      <div className={`w-full ${isUser ? 'max-w-[85%]' : 'max-w-3xl'}`}>
+    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} group px-4 sm:px-0`}>
+      <div className={`w-full ${isUser ? 'max-w-[85%] sm:max-w-[70%]' : 'max-w-3xl'}`}>
         {isUser ? (
-          /* User message — right-aligned, clean bubble */
           <div className="flex justify-end">
             <div
-              className={`px-4 py-2.5 rounded-2xl rounded-br-md text-[15px] leading-relaxed ${
-                isError
-                  ? 'bg-red-500/10 text-red-400'
-                  : 'text-white'
-              } ${message.deleting ? 'opacity-50' : ''}`}
-              style={!isError ? { background: '#2f2f2f' } : undefined}
+              className={`px-4 py-3 rounded-2xl rounded-br-md text-[15px] leading-relaxed ${isError ? 'bg-red-500/10 text-red-400 border border-red-500/20' : ''} ${message.deleting ? 'opacity-50' : ''}`}
+              style={!isError ? { background: '#2f2f2f', border: '1px solid rgba(255,255,255,0.12)' } : undefined}
             >
               {message.retrying ? (
                 <div className="flex items-center gap-2 text-sm text-white/50">
@@ -43,15 +37,9 @@ export function MessageBubble({ message, onDelete }: MessageBubbleProps) {
             </div>
           </div>
         ) : (
-          /* Assistant message — left-aligned, no background */
           <div className="flex gap-3">
-            <div className="flex-shrink-0 mt-0.5">
-              <div
-                className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium"
-                style={{ background: '#C9A24B', color: '#212121' }}
-              >
-                T
-              </div>
+            <div className="flex-shrink-0 mt-1">
+              <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold" style={{ background: '#C9A24B', color: '#212121' }}>T</div>
             </div>
             <div className={`flex-1 min-w-0 ${message.deleting ? 'opacity-50' : ''}`}>
               {message.retrying ? (
@@ -66,29 +54,17 @@ export function MessageBubble({ message, onDelete }: MessageBubbleProps) {
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
                 </div>
               )}
-
-              {/* Actions — show on hover */}
-              <div className="flex items-center gap-3 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                <span className="text-[11px] text-white/30">{formatTime(message.createdAt)}</span>
+              <div className="flex items-center gap-3 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <span className="text-[11px] text-white/25">{formatTime(message.createdAt)}</span>
                 {message.error && !message.retrying && (
-                  <button
-                    className="text-[11px] text-[#C9A24B] hover:text-[#E8CE8C] transition-colors"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      window.dispatchEvent(new CustomEvent('retry-message', { detail: message.id }));
-                    }}
-                  >
+                  <button className="text-[11px] text-[#C9A24B] hover:text-[#E8CE8C] transition-colors"
+                    onClick={() => window.dispatchEvent(new CustomEvent('retry-message', { detail: message.id }))}>
                     Retry
                   </button>
                 )}
                 {isUser && onDelete && !message.error && (
-                  <button
-                    className="text-[11px] text-white/30 hover:text-red-400 transition-colors"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDelete(message.id);
-                    }}
-                  >
+                  <button className="text-[11px] text-white/25 hover:text-red-400 transition-colors"
+                    onClick={() => onDelete(message.id)}>
                     Delete
                   </button>
                 )}

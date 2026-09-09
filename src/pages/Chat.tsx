@@ -40,36 +40,21 @@ export function Chat() {
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
 
-  useEffect(() => {
-    loadHistory();
-  }, []);
+  useEffect(() => { loadHistory(); }, []);
 
   const PAGE_SIZE = 20;
 
   const loadHistory = async (offset = 0) => {
     try {
       const params = `offset=${offset}&limit=${PAGE_SIZE}`;
-      const { data, error } = await supabase.functions.invoke(`chat?${params}`, {
-        method: 'GET',
-      });
-
+      const { data, error } = await supabase.functions.invoke(`chat?${params}`, { method: 'GET' });
       if (error) throw new Error(error.message);
-
       const history = data?.messages || [];
       setHasMore(data?.hasMore || false);
-
       const mapped = history.map((m: { id: string; role: string; content: string; created_at: string }) => ({
-        id: m.id,
-        role: m.role as 'user' | 'assistant',
-        content: m.content,
-        createdAt: m.created_at,
+        id: m.id, role: m.role as 'user' | 'assistant', content: m.content, createdAt: m.created_at,
       })).reverse();
-
-      if (offset === 0) {
-        setMessages(mapped);
-      } else {
-        setMessages((prev) => [...mapped, ...prev]);
-      }
+      setMessages(offset === 0 ? mapped : (prev) => [...mapped, ...prev]);
     } catch (err) {
       console.error('Failed to load history:', err);
     } finally {
@@ -86,120 +71,65 @@ export function Chat() {
 
   const sendMessage = useCallback(async (content: string) => {
     if (sending) return;
-
-    const userMessage: Message = {
-      id: generateId(),
-      role: 'user',
-      content,
-      createdAt: new Date().toISOString(),
-    };
-
+    const userMessage: Message = { id: generateId(), role: 'user', content, createdAt: new Date().toISOString() };
     setMessages((prev) => [...prev, userMessage]);
     setSending(true);
     setIsTyping(true);
-
     try {
-      const { data, error } = await supabase.functions.invoke('chat', {
-        body: { message: content },
-      });
-
-      if (error) {
-        console.error('Edge Function error:', error);
-        throw new Error(error.message || error.toString());
-      }
-
+      const { data, error } = await supabase.functions.invoke('chat', { body: { message: content } });
+      if (error) throw new Error(error.message || error.toString());
       setIsTyping(false);
-
       const reply = data?.reply;
       if (typeof reply === 'string' && reply.trim()) {
-        const assistantMessage: Message = {
-          id: generateId(),
-          role: 'assistant',
-          content: reply,
-          createdAt: new Date().toISOString(),
-        };
-        setMessages((prev) => [...prev, assistantMessage]);
+        setMessages((prev) => [...prev, { id: generateId(), role: 'assistant', content: reply, createdAt: new Date().toISOString() }]);
       } else {
         throw new Error('Empty response from Tipu');
       }
     } catch (err) {
       setIsTyping(false);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to send message';
-      const is429 = errorMessage.includes('429') || errorMessage.includes('rate limit') || errorMessage.includes('busy');
-      const assistantMessage: Message = {
-        id: generateId(),
-        role: 'assistant',
-        content: is429
-          ? 'Tipu is a bit busy right now. Give me a moment and try again!'
-          : `Error: ${errorMessage}`,
-        createdAt: new Date().toISOString(),
-        error: !is429,
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
-    } finally {
-      setSending(false);
-    }
+      const msg = err instanceof Error ? err.message : 'Failed to send';
+      const is429 = msg.includes('429') || msg.includes('rate limit') || msg.includes('busy');
+      setMessages((prev) => [...prev, { id: generateId(), role: 'assistant', content: is429 ? 'Tipu is busy. Try again!' : `Error: ${msg}`, createdAt: new Date().toISOString(), error: !is429 }]);
+    } finally { setSending(false); }
   }, [sending]);
 
   const handleRetry = useCallback((messageId: string) => {
     const message = messages.find((m) => m.id === messageId);
     if (!message || message.role !== 'assistant' || !message.error) return;
-
     const userMessage = [...messages].reverse().find((m) => m.role === 'user' && new Date(m.createdAt) < new Date(message.createdAt));
     if (!userMessage) return;
-
-    setMessages((prev) =>
-      prev.map((m) =>
-        m.id === messageId ? { ...m, content: '', error: false, retrying: true } : m
-      )
-    );
-
+    setMessages((prev) => prev.map((m) => m.id === messageId ? { ...m, content: '', error: false, retrying: true } : m));
     sendMessage(userMessage.content);
   }, [messages, sendMessage]);
 
   const handleDelete = useCallback(async (messageId: string) => {
-    setMessages((prev) =>
-      prev.map((m) =>
-        m.id === messageId ? { ...m, deleting: true } : m
-      )
-    );
-
+    setMessages((prev) => prev.map((m) => m.id === messageId ? { ...m, deleting: true } : m));
     try {
-      const { error } = await supabase.functions.invoke('chat', {
-        method: 'DELETE',
-        body: { messageId },
-      });
-
+      const { error } = await supabase.functions.invoke('chat', { method: 'DELETE', body: { messageId } });
       if (error) throw new Error(error.message);
-
       setMessages((prev) => prev.filter((m) => m.id !== messageId));
     } catch (err) {
-      console.error('Failed to delete message:', err);
-      setMessages((prev) =>
-        prev.map((m) =>
-          m.id === messageId ? { ...m, deleting: false } : m
-        )
-      );
+      console.error('Failed to delete:', err);
+      setMessages((prev) => prev.map((m) => m.id === messageId ? { ...m, deleting: false } : m));
     }
   }, []);
 
   useEffect(() => {
-    const handleRetryEvent = (e: CustomEvent<string>) => {
-      handleRetry(e.detail);
-    };
-    window.addEventListener('retry-message', handleRetryEvent as EventListener);
-    return () => window.removeEventListener('retry-message', handleRetryEvent as EventListener);
+    const h = (e: CustomEvent<string>) => handleRetry(e.detail);
+    window.addEventListener('retry-message', h as EventListener);
+    return () => window.removeEventListener('retry-message', h as EventListener);
   }, [handleRetry]);
 
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col" style={{ background: '#212121' }}>
-        <div className="flex-1 flex items-center justify-center">
+        <header className="h-14 border-b" style={{ borderColor: 'rgba(255,255,255,0.1)', background: '#212121' }} />
+        <main className="flex-1 flex items-center justify-center">
           <div className="flex flex-col items-center gap-3">
             <div className="w-8 h-8 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
             <p className="text-white/40 text-sm">Loading...</p>
           </div>
-        </div>
+        </main>
       </div>
     );
   }
@@ -207,70 +137,51 @@ export function Chat() {
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#212121' }}>
       {/* Header */}
-      <header className="sticky top-0 z-10" style={{ background: '#212121', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-        <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            {activeTab === 'chat' && (
-              <>
-                <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium" style={{ background: '#C9A24B', color: '#212121' }}>
-                  T
-                </div>
-                <span className="text-white font-medium text-[15px]">Tipu</span>
-              </>
-            )}
-            {activeTab === 'memory' && (
-              <span className="text-white font-medium text-[15px]">Memory</span>
-            )}
-            {activeTab === 'settings' && (
-              <span className="text-white font-medium text-[15px]">Settings</span>
-            )}
+      <header className="h-14 border-b flex items-center px-4 sm:px-6 sticky top-0 z-20" style={{ borderColor: 'rgba(255,255,255,0.1)', background: '#212121' }}>
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold" style={{ background: '#C9A24B', color: '#212121' }}>T</div>
+          <div>
+            <span className="text-white font-medium text-sm">Tipu</span>
+            <span className="text-white/30 text-xs ml-2 hidden sm:inline">Personal AI</span>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col">
+      <main className="flex-1 flex flex-col min-h-0">
         {activeTab === 'chat' && (
-          <div className="flex-1 flex flex-col h-full">
-            <MessageList
-              messages={messages}
-              isTyping={isTyping}
-              onDelete={handleDelete}
-              hasMore={hasMore}
-              loadingMore={loadingMore}
-              onLoadMore={loadOlder}
-            />
-            <MessageInput
-              onSend={sendMessage}
-              disabled={sending}
-              placeholder={isTyping ? 'Tipu is thinking...' : 'Message Tipu...'}
-            />
+          <div className="flex-1 flex flex-col">
+            <MessageList messages={messages} isTyping={isTyping} onDelete={handleDelete} hasMore={hasMore} loadingMore={loadingMore} onLoadMore={loadOlder} />
+            <MessageInput onSend={sendMessage} disabled={sending} placeholder={isTyping ? 'Tipu is thinking...' : 'Message Tipu...'} />
           </div>
         )}
-
         {activeTab === 'memory' && <MemoryPage />}
         {activeTab === 'settings' && <Settings />}
       </main>
 
-      {/* Bottom Navigation */}
-      <nav className="sticky bottom-0 z-10" style={{ background: '#212121', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-        <div className="max-w-3xl mx-auto flex">
+      {/* Bottom Nav */}
+      <nav className="border-t flex sm:hidden" style={{ borderColor: 'rgba(255,255,255,0.1)', background: '#212121' }}>
+        <div className="flex-1 flex">
           {(Object.keys(TAB_ICONS) as Tab[]).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`flex-1 flex flex-col items-center gap-1 py-2 transition-colors ${
-                activeTab === tab
-                  ? 'text-white'
-                  : 'text-white/40 hover:text-white/60'
-              }`}
-            >
+            <button key={tab} onClick={() => setActiveTab(tab)}
+              className={`flex-1 flex flex-col items-center gap-0.5 py-2 transition-colors ${activeTab === tab ? 'text-white' : 'text-white/30 hover:text-white/50'}`}>
               {TAB_ICONS[tab]}
-              <span className="text-[11px] capitalize">{tab}</span>
+              <span className="text-[10px] capitalize">{tab}</span>
             </button>
           ))}
         </div>
       </nav>
+
+      {/* Desktop side tabs — hidden on mobile */}
+      <div className="hidden sm:flex fixed bottom-6 left-1/2 -translate-x-1/2 z-30 rounded-xl px-2 py-1.5 gap-1" style={{ background: '#2f2f2f', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 4px 24px rgb(0 0 0 / 0.4)' }}>
+        {(Object.keys(TAB_ICONS) as Tab[]).map((tab) => (
+          <button key={tab} onClick={() => setActiveTab(tab)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-colors ${activeTab === tab ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white/60 hover:bg-white/5'}`}>
+            {TAB_ICONS[tab]}
+            <span className="capitalize">{tab}</span>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
