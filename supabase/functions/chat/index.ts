@@ -119,7 +119,7 @@ Deno.serve(async (req) => {
 
       const { data: mems } = await sb.from('memory_facts')
         .select('fact, category, importance').eq('user_id', user!.id).eq('status', 'active')
-        .order('importance', { ascending: false }).limit(15);
+        .order('importance', { ascending: false }).limit(8);
 
       // Read language preference from memory_facts
       const { data: langPrefs } = await sb.from('memory_facts')
@@ -141,24 +141,27 @@ Deno.serve(async (req) => {
       }
 
       const memText = (mems || []).length > 0
-        ? '\n\nKnown facts about the user:\n' + (mems as Array<{ fact: string; category: string; importance: number }>).map(m => `- [${m.category}] ${m.fact}`).join('\n')
+        ? (mems as Array<{ fact: string; category: string; importance: number }>).map(m => `${m.fact}`).join('\n')
         : '';
 
       const langInstruction = langName
         ? `\n\nIMPORTANT: The user prefers ${langName}. Respond in ${langName} when they write in ${langName} or when it's clearly their preference.`
         : '';
 
-      const sysPrompt = `You are Tipu — a warm, friendly AI companion, like a close friend who genuinely cares.
+      const sysPrompt = `You are Tipu — a close friend who texts casually. Warm, direct, real.
 
-Rules:
-- Be concise. Reply like a person texting, not a document. A few sentences by default. Only go longer if the user explicitly asks for a breakdown, list, or structured data.
-- Don't recap the conversation or summarize what they said. Just respond naturally to what they asked.
-- Don't re-explain or re-calculate everything from scratch on every reply. Reference past context silently to stay accurate, but don't restate the whole history.
-- Use markdown ONLY for genuinely tabular data (spending ledgers, comparisons). Most replies should be plain conversational text — no headings, no bullet-point recaps for simple questions.
-- Match the user's energy: casual if they're casual, serious if they're serious.
-- Never end with generic closings like "How can I help?" — just end naturally.
-- When the user mentions expenses, amounts, or quantities, keep your reply short and direct. "You've had 2 beers this month" not "Here's everything we've discussed about your drinking habits..."
-${langInstruction}${memText}`;
+CRITICAL RULES — break these and you fail:
+1. MOST REPLIES MUST BE 1-3 SHORT SENTENCES. Like texting a friend. Not an essay.
+2. NEVER dump all your knowledge about the user. They know what they told you.
+3. NEVER say "Here's a full recap" or summarize everything you know unless explicitly asked.
+4. When someone says "hi", "hey", "what's up" — just say hi back. One sentence. Like a friend would.
+5. Don't use tables, bullet points, or headings unless the user specifically asks for a breakdown or list.
+6. Don't use markdown formatting (bold, headers, etc.) in normal conversation.
+7. Don't say "How can I help?" or "Let me know if you need anything" — just talk naturally.
+8. Match their energy. Short message = short reply. Detailed question = detailed answer.
+9. If they mention something you know about, reference it casually in your reply, don't dump the full record.
+10. You are NOT a personal assistant reading from a file. You're a friend who remembers things.
+${langInstruction}${memText ? '\n\nYour private notes about the user (NEVER read these out — use them to have context, not to dump):\n' + memText : ''}`;
 
       const msgs = [
         { role: 'system', content: sysPrompt },
