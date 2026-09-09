@@ -4,110 +4,117 @@ export function Settings() {
   const { signOut, user } = useAuth();
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 py-4 relative z-10">
-      <div className="max-w-lg mx-auto space-y-6">
+    <div className="flex-1 overflow-y-auto px-4 py-6">
+      <div className="max-w-3xl mx-auto space-y-6">
 
         {/* Profile */}
-        <div className="flex items-center gap-3.5 pb-5 animate-slide-up" style={{ borderBottom: '1px solid rgba(201,162,75,0.16)' }}>
+        <div className="flex items-center gap-3.5 pb-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
           <div
-            className="w-[52px] h-[52px] rounded-full flex items-center justify-center text-[#0A0D16] text-xl font-semibold flex-shrink-0"
-            style={{
-              background: 'radial-gradient(circle at 30% 25%, #E8CE8C, #C9A24B 60%, #8a6b28 100%)',
-              fontFamily: 'var(--font-serif)',
-              boxShadow: '0 0 0 1px rgba(201,162,75,0.35), 0 4px 14px rgba(201,162,75,0.18)',
-            }}
+            className="w-11 h-11 rounded-full flex items-center justify-center text-sm font-medium flex-shrink-0"
+            style={{ background: '#C9A24B', color: '#212121' }}
           >
             {user?.email?.[0]?.toUpperCase() || '?'}
           </div>
           <div className="min-w-0">
-            <div className="text-[17px] truncate" style={{ color: '#EDE9DE', fontFamily: 'var(--font-serif)' }}>
+            <div className="text-[15px] text-white truncate">
               {user?.email?.split('@')[0] || 'User'}
             </div>
-            <div className="text-[12.5px] truncate mt-0.5" style={{ color: '#8891A8' }}>{user?.email}</div>
+            <div className="text-[13px] text-white/40 truncate mt-0.5">{user?.email}</div>
           </div>
         </div>
 
         {/* Preferences */}
-        <div className="animate-slide-up" style={{ animationDelay: '0.05s' }}>
-          <div className="text-[11px] uppercase tracking-widest font-semibold mb-2 px-1" style={{ color: '#5B6178' }}>Preferences</div>
-          <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(201,162,75,0.16)' }}>
-            <div className="flex items-center gap-3 px-4 py-3.5" style={{ borderBottom: '1px solid rgba(201,162,75,0.16)' }}>
-              <div className="w-[30px] h-[30px] rounded-[9px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(201,162,75,0.14)', color: '#E8CE8C' }}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 5h16M4 12h10M4 19h13" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
+        <div>
+          <div className="text-[11px] text-white/30 uppercase tracking-wider font-medium mb-2 px-1">Preferences</div>
+          <div className="rounded-xl overflow-hidden" style={{ background: '#2f2f2f', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <div className="flex items-center gap-3 px-4 py-3.5" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(255,255,255,0.05)' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-white/50">
+                  <path d="M4 5h16M4 12h10M4 19h13" strokeLinecap="round"/>
+                </svg>
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-sm" style={{ color: '#EDE9DE' }}>Reply language</div>
-                <div className="text-[11.5px] mt-0.5" style={{ color: '#8891A8' }}>Always respond in Bengali</div>
+                <div className="text-sm text-white">Reply language</div>
+                <div className="text-[12px] text-white/40 mt-0.5">Always respond in Bengali</div>
               </div>
-              <div className="text-[13px]" style={{ color: '#8891A8' }}>বাংলা</div>
+              <div className="text-[13px] text-white/40">বাংলা</div>
             </div>
-            <div className="flex items-center gap-3 px-4 py-3.5" style={{ borderBottom: '1px solid rgba(201,162,75,0.16)' }}>
-              <div className="w-[30px] h-[30px] rounded-[9px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(201,162,75,0.14)', color: '#E8CE8C' }}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M21 12.8A9 9 0 1111.2 3 7 7 0 0021 12.8z" stroke="currentColor" strokeWidth="1.6"/></svg>
+            <div className="flex items-center gap-3 px-4 py-3.5" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(255,255,255,0.05)' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-white/50">
+                  <path d="M21 12.8A9 9 0 1111.2 3 7 7 0 0021 12.8z"/>
+                </svg>
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-sm" style={{ color: '#EDE9DE' }}>Dark theme</div>
-                <div className="text-[11.5px] mt-0.5" style={{ color: '#8891A8' }}>Always on</div>
+                <div className="text-sm text-white">Dark theme</div>
+                <div className="text-[12px] text-white/40 mt-0.5">Always on</div>
               </div>
-              <div className="w-[38px] h-[22px] rounded-xl relative flex-shrink-0" style={{ background: 'rgba(201,162,75,0.2)', border: '1px solid #C9A24B' }}>
-                <div className="w-[16px] h-[16px] rounded-full absolute top-[2px] right-[2px]" style={{ background: '#E8CE8C' }} />
+              <div className="w-9 h-5 rounded-full relative flex-shrink-0" style={{ background: '#C9A24B' }}>
+                <div className="w-4 h-4 rounded-full bg-white absolute top-[2px] right-[2px]" />
               </div>
             </div>
             <div className="flex items-center gap-3 px-4 py-3.5">
-              <div className="w-[30px] h-[30px] rounded-[9px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(201,162,75,0.14)', color: '#E8CE8C' }}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 01-3.4 0" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(255,255,255,0.05)' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-white/50">
+                  <path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 01-3.4 0" strokeLinecap="round"/>
+                </svg>
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-sm" style={{ color: '#EDE9DE' }}>Daily check-in reminder</div>
-                <div className="text-[11.5px] mt-0.5" style={{ color: '#8891A8' }}>9:00 PM</div>
+                <div className="text-sm text-white">Daily check-in reminder</div>
+                <div className="text-[12px] text-white/40 mt-0.5">9:00 PM</div>
               </div>
-              <div className="w-[38px] h-[22px] rounded-xl relative flex-shrink-0" style={{ background: 'rgba(201,162,75,0.2)', border: '1px solid #C9A24B' }}>
-                <div className="w-[16px] h-[16px] rounded-full absolute top-[2px] right-[2px]" style={{ background: '#E8CE8C' }} />
+              <div className="w-9 h-5 rounded-full relative flex-shrink-0" style={{ background: '#C9A24B' }}>
+                <div className="w-4 h-4 rounded-full bg-white absolute top-[2px] right-[2px]" />
               </div>
             </div>
           </div>
         </div>
 
         {/* Memory & data */}
-        <div className="animate-slide-up" style={{ animationDelay: '0.1s' }}>
-          <div className="text-[11px] uppercase tracking-widest font-semibold mb-2 px-1" style={{ color: '#5B6178' }}>Memory & data</div>
-          <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(201,162,75,0.16)' }}>
-            <button className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-white/[0.02] transition-colors" style={{ borderBottom: '1px solid rgba(201,162,75,0.16)' }}>
-              <div className="w-[30px] h-[30px] rounded-[9px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(201,162,75,0.14)', color: '#E8CE8C' }}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 3a9 9 0 100 18 9 9 0 000-18z" stroke="currentColor" strokeWidth="1.6"/><path d="M12 7v5l3.5 2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+        <div>
+          <div className="text-[11px] text-white/30 uppercase tracking-wider font-medium mb-2 px-1">Memory & data</div>
+          <div className="rounded-xl overflow-hidden" style={{ background: '#2f2f2f', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <button className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-white/[0.02] transition-colors" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(255,255,255,0.05)' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-white/50">
+                  <path d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-sm" style={{ color: '#EDE9DE' }}>Manage memory</div>
-                <div className="text-[11.5px] mt-0.5" style={{ color: '#8891A8' }}>View, edit, or clear what Tipu knows</div>
+                <div className="text-sm text-white">Manage memory</div>
+                <div className="text-[12px] text-white/40 mt-0.5">View, edit, or clear what Tipu knows</div>
               </div>
-              <div className="text-sm" style={{ color: '#8891A8' }}>&rsaquo;</div>
+              <div className="text-white/30 text-sm">&rsaquo;</div>
             </button>
             <button className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-white/[0.02] transition-colors">
-              <div className="w-[30px] h-[30px] rounded-[9px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(201,162,75,0.14)', color: '#E8CE8C' }}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 3v13m0 0l-4-4m4 4l4-4M4 19h16" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(255,255,255,0.05)' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-white/50">
+                  <path d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-sm" style={{ color: '#EDE9DE' }}>Export my data</div>
-                <div className="text-[11.5px] mt-0.5" style={{ color: '#8891A8' }}>Download everything as JSON</div>
+                <div className="text-sm text-white">Export my data</div>
+                <div className="text-[12px] text-white/40 mt-0.5">Download everything as JSON</div>
               </div>
-              <div className="text-sm" style={{ color: '#8891A8' }}>&rsaquo;</div>
+              <div className="text-white/30 text-sm">&rsaquo;</div>
             </button>
           </div>
         </div>
 
         {/* Account */}
-        <div className="animate-slide-up" style={{ animationDelay: '0.15s' }}>
-          <div className="text-[11px] uppercase tracking-widest font-semibold mb-2 px-1" style={{ color: '#5B6178' }}>Account</div>
-          <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(201,162,75,0.16)' }}>
+        <div>
+          <div className="text-[11px] text-white/30 uppercase tracking-wider font-medium mb-2 px-1">Account</div>
+          <div className="rounded-xl overflow-hidden" style={{ background: '#2f2f2f', border: '1px solid rgba(255,255,255,0.08)' }}>
             <button
               onClick={() => signOut()}
-              className="w-full flex items-center gap-3 px-4 py-3.5 text-left transition-colors"
-              style={{ ['--hover-bg' as string]: 'rgba(248,113,113,0.05)' }}
+              className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-white/[0.02] transition-colors"
             >
-              <div className="w-[30px] h-[30px] rounded-[9px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(184,101,79,0.16)', color: '#B8654F' }}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M9 6V4a2 2 0 012-2h2a2 2 0 012 2v2M4 6h16M6 6l1 14a2 2 0 002 2h6a2 2 0 002-2l1-14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(248,113,113,0.1)' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-red-400">
+                  <path d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               </div>
-              <div className="text-sm" style={{ color: '#B8654F' }}>Sign out</div>
+              <div className="text-sm text-red-400">Sign out</div>
             </button>
           </div>
         </div>

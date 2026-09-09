@@ -2,12 +2,10 @@
 
 @theme {
   --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-serif: 'Fraunces', Georgia, serif;
 }
 
 :root {
   --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-serif: 'Fraunces', Georgia, serif;
 }
 
 @layer base {
@@ -22,9 +20,9 @@
   body {
     margin: 0;
     min-height: 100vh;
-    background: #0A0D16;
-    color: #EDE9DE;
-    line-height: 1.65;
+    background: #212121;
+    color: #ffffff;
+    line-height: 1.6;
     overflow-x: hidden;
   }
 
@@ -32,95 +30,102 @@
 
   ::selection {
     background: #C9A24B;
-    color: #0A0D16;
+    color: #212121;
   }
 
-  ::-webkit-scrollbar { width: 0; height: 0; }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+  input, textarea {
+    outline: none;
+  }
+
+  input::placeholder, textarea::placeholder {
+    color: rgba(255,255,255,0.3);
+  }
 }
 
 @layer utilities {
-  .scrollbar-thin {
-    scrollbar-width: thin;
-    scrollbar-color: rgba(201, 162, 75, 0.15) transparent;
+  .animate-fade-in { animation: fadeIn 0.3s ease-out; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
-  .animate-wave { animation: wave 1.2s ease-in-out infinite; }
-  .animate-spin { animation: spin 1s linear infinite; }
-
-  @keyframes wave { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-8px); } }
-  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
-  /* ── Markdown content styles ──────────────────── */
-  .markdown-content h3 {
-    font-family: var(--font-serif);
-    font-size: 1.05rem;
-    font-weight: 700;
-    color: #E8CE8C;
-    letter-spacing: 0.02em;
-    margin: 0.6em 0 0.3em;
-  }
-  .markdown-content h4 {
-    font-family: var(--font-serif);
-    font-size: 0.95rem;
+  /* ── Markdown content ──────────────────── */
+  .markdown-content { line-height: 1.7; }
+  .markdown-content h1, .markdown-content h2, .markdown-content h3,
+  .markdown-content h4, .markdown-content h5, .markdown-content h6 {
+    color: #ffffff;
     font-weight: 600;
-    color: #E8CE8C;
-    letter-spacing: 0.03em;
-    margin: 0.4em 0 0.2em;
+    margin: 1em 0 0.5em;
   }
-  .markdown-content strong { color: #E8CE8C; font-weight: 600; }
-  .markdown-content em { color: #8891A8; }
+  .markdown-content h1 { font-size: 1.5em; }
+  .markdown-content h2 { font-size: 1.3em; }
+  .markdown-content h3 { font-size: 1.1em; }
+  .markdown-content p { margin: 0.5em 0; }
+  .markdown-content p:first-child { margin-top: 0; }
+  .markdown-content p:last-child { margin-bottom: 0; }
+  .markdown-content strong { color: #ffffff; font-weight: 600; }
+  .markdown-content em { color: rgba(255,255,255,0.6); }
+  .markdown-content a { color: #C9A24B; text-decoration: underline; text-underline-offset: 2px; }
+  .markdown-content ul, .markdown-content ol { padding-left: 1.5em; margin: 0.5em 0; }
+  .markdown-content li { margin: 0.25em 0; }
+  .markdown-content li::marker { color: rgba(255,255,255,0.3); }
+  .markdown-content blockquote {
+    border-left: 3px solid rgba(255,255,255,0.15);
+    padding-left: 1em;
+    margin: 0.5em 0;
+    color: rgba(255,255,255,0.6);
+  }
+  .markdown-content code {
+    font-size: 0.85em;
+    background: rgba(255,255,255,0.08);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    color: #C9A24B;
+  }
+  .markdown-content pre {
+    background: #171717;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    padding: 1em;
+    overflow-x: auto;
+    margin: 0.75em 0;
+  }
+  .markdown-content pre code {
+    background: none;
+    padding: 0;
+    color: #ffffff;
+  }
   .markdown-content table {
     width: 100%;
     border-collapse: collapse;
-    margin: 0.6em 0;
-    font-size: 0.82rem;
+    margin: 0.75em 0;
+    font-size: 0.9em;
   }
   .markdown-content th {
     text-align: left;
-    padding: 0.45em 0.6em;
-    border-bottom: 1px solid rgba(201, 162, 75, 0.16);
-    color: #C9A24B;
+    padding: 0.6em 0.8em;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.5);
     font-weight: 600;
-    font-size: 0.72rem;
+    font-size: 0.8em;
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
   .markdown-content td {
-    padding: 0.35em 0.6em;
-    border-bottom: 1px dashed rgba(201, 162, 75, 0.12);
-    color: #8891A8;
-  }
-  .markdown-content td:last-child {
-    text-align: right;
-    color: #EDE9DE;
-    font-variant-numeric: tabular-nums;
+    padding: 0.5em 0.8em;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    color: rgba(255,255,255,0.8);
   }
   .markdown-content tr:last-child td { border-bottom: none; }
-  .markdown-content p { margin: 0.35em 0; }
-  .markdown-content p:first-child { margin-top: 0; }
-  .markdown-content p:last-child { margin-bottom: 0; }
-  .markdown-content ul, .markdown-content ol { padding-left: 1.2em; margin: 0.35em 0; }
-  .markdown-content li { margin: 0.15em 0; }
-  .markdown-content code {
-    font-size: 0.85em;
-    background: rgba(201, 162, 75, 0.08);
-    padding: 0.1em 0.3em;
-    border-radius: 4px;
-  }
-  .markdown-content pre {
-    background: rgba(19, 24, 41, 0.6);
-    border: 1px solid rgba(201, 162, 75, 0.16);
-    border-radius: 8px;
-    padding: 0.8em;
-    overflow-x: auto;
-    margin: 0.5em 0;
-  }
-  .markdown-content pre code { background: none; padding: 0; }
-  .markdown-content a { color: #E8CE8C; text-decoration: underline; text-underline-offset: 2px; }
-  .markdown-content blockquote {
-    border-left: 3px solid #C9A24B;
-    padding-left: 0.8em;
-    margin: 0.5em 0;
-    color: #8891A8;
+  .markdown-content hr {
+    border: none;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    margin: 1em 0;
   }
 }

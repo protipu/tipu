@@ -8,10 +8,10 @@ function AppContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-app-gradient">
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#212121' }}>
         <div className="text-center">
-          <div className="w-12 h-12 border-3 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-text-muted text-sm">Loading...</p>
+          <div className="w-8 h-8 border-2 border-white/20 border-t-white/60 rounded-full animate-spin mx-auto mb-3"></div>
+          <p className="text-white/40 text-sm">Loading...</p>
         </div>
       </div>
     );

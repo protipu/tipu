@@ -14,20 +14,19 @@ type Tab = 'chat' | 'memory' | 'settings';
 
 const TAB_ICONS: Record<Tab, import('react').ReactElement> = {
   chat: (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round">
-      <path d="M4 5h16v11H8l-4 4V5z" />
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round">
+      <path d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.076-4.076a1.526 1.526 0 011.037-.443 48.282 48.282 0 005.68-.494c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
     </svg>
   ),
   memory: (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-      <path d="M12 3a9 9 0 100 18 9 9 0 000-18z" />
-      <path d="M12 7v5l3.5 2" strokeLinecap="round" />
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
   settings: (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-      <circle cx="12" cy="12" r="2.6" />
-      <path d="M12 3.5v2M12 18.5v2M3.5 12h2M18.5 12h2M6 6l1.4 1.4M16.6 16.6L18 18M6 18l1.4-1.4M16.6 7.4L18 6" strokeLinecap="round" />
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
 };
@@ -194,74 +193,43 @@ export function Chat() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col" style={{ background: '#0A0D16' }}>
-        <header className="border-b border-[rgba(201,162,75,0.16)] sticky top-0 z-10" style={{ background: '#0A0D16' }}>
-          <div className="max-w-2xl mx-auto px-5 py-3 flex items-center gap-3">
-            <div
-              className="w-[42px] h-[42px] rounded-full flex items-center justify-center text-[18px] font-semibold text-[#0A0D16] flex-shrink-0"
-              style={{
-                background: 'radial-gradient(circle at 30% 25%, #E8CE8C, #C9A24B 60%, #8a6b28 100%)',
-                fontFamily: 'var(--font-serif)',
-                boxShadow: '0 0 0 1px rgba(201,162,75,0.35), 0 4px 14px rgba(201,162,75,0.18)',
-              }}
-            >T</div>
-            <h1 className="text-[19px] text-[#EDE9DE]" style={{ fontFamily: 'var(--font-serif)' }}>Tipu</h1>
+      <div className="min-h-screen flex flex-col" style={{ background: '#212121' }}>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-8 h-8 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
+            <p className="text-white/40 text-sm">Loading...</p>
           </div>
-        </header>
-        <main className="flex-1 max-w-2xl mx-auto w-full flex flex-col px-5 py-8">
-          <div className="flex-1 flex items-center justify-center">
-            <div className="flex flex-col items-center gap-4 text-center">
-              <div className="w-10 h-10 border-2 border-[#C9A24B] border-t-transparent rounded-full animate-spin" />
-              <p className="text-[#8891A8] text-sm">Loading...</p>
-            </div>
-          </div>
-        </main>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#0A0D16' }}>
-
-      {/* Header — changes per tab */}
-      <header className="border-b border-[rgba(201,162,75,0.16)] sticky top-0 z-10" style={{ background: '#0A0D16' }}>
-        <div className="max-w-2xl mx-auto px-5 py-3 flex items-center gap-3">
-          {activeTab === 'chat' && (
-            <>
-              <div
-                className="w-[42px] h-[42px] rounded-full flex items-center justify-center text-[18px] font-semibold text-[#0A0D16] flex-shrink-0"
-                style={{
-                  background: 'radial-gradient(circle at 30% 25%, #E8CE8C, #C9A24B 60%, #8a6b28 100%)',
-                  fontFamily: 'var(--font-serif)',
-                  boxShadow: '0 0 0 1px rgba(201,162,75,0.35), 0 4px 14px rgba(201,162,75,0.18)',
-                }}
-              >T</div>
-              <div className="flex-1 min-w-0">
-                <div className="text-[19px] text-[#EDE9DE]" style={{ fontFamily: 'var(--font-serif)' }}>Tipu</div>
-                <div className="text-[12px] text-[#8891A8] flex items-center gap-1.5">
-                  <span className="w-[6px] h-[6px] rounded-full bg-[#6FCF97] inline-block" style={{ boxShadow: '0 0 6px rgba(111,207,151,0.7)' }} />
-                  Active
+    <div className="min-h-screen flex flex-col" style={{ background: '#212121' }}>
+      {/* Header */}
+      <header className="sticky top-0 z-10" style={{ background: '#212121', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {activeTab === 'chat' && (
+              <>
+                <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium" style={{ background: '#C9A24B', color: '#212121' }}>
+                  T
                 </div>
-              </div>
-            </>
-          )}
-          {activeTab === 'memory' && (
-            <div className="flex-1 min-w-0">
-              <div className="text-[19px] text-[#EDE9DE]" style={{ fontFamily: 'var(--font-serif)' }}>Memory</div>
-              <div className="text-[12px] text-[#8891A8]">What Tipu has learned about you</div>
-            </div>
-          )}
-          {activeTab === 'settings' && (
-            <div className="flex-1 min-w-0">
-              <div className="text-[19px] text-[#EDE9DE]" style={{ fontFamily: 'var(--font-serif)' }}>Settings</div>
-              <div className="text-[12px] text-[#8891A8]">Your account & preferences</div>
-            </div>
-          )}
+                <span className="text-white font-medium text-[15px]">Tipu</span>
+              </>
+            )}
+            {activeTab === 'memory' && (
+              <span className="text-white font-medium text-[15px]">Memory</span>
+            )}
+            {activeTab === 'settings' && (
+              <span className="text-white font-medium text-[15px]">Settings</span>
+            )}
+          </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 max-w-2xl mx-auto w-full flex flex-col relative z-10">
+      <main className="flex-1 flex flex-col">
         {activeTab === 'chat' && (
           <div className="flex-1 flex flex-col h-full">
             <MessageList
@@ -285,21 +253,20 @@ export function Chat() {
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="border-t border-[rgba(201,162,75,0.16)] sticky bottom-0 z-10" style={{ background: '#0A0D16' }}>
-        <div className="max-w-2xl mx-auto flex">
+      <nav className="sticky bottom-0 z-10" style={{ background: '#212121', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="max-w-3xl mx-auto flex">
           {(Object.keys(TAB_ICONS) as Tab[]).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`flex-1 flex flex-col items-center gap-1 py-2.5 transition-colors ${
+              className={`flex-1 flex flex-col items-center gap-1 py-2 transition-colors ${
                 activeTab === tab
-                  ? 'text-[#E8CE8C]'
-                  : 'text-[#5B6178] hover:text-[#8891A8]'
+                  ? 'text-white'
+                  : 'text-white/40 hover:text-white/60'
               }`}
             >
               {TAB_ICONS[tab]}
-              <span className="text-[11px] font-medium capitalize">{tab}</span>
-              <div className={`w-1 h-1 rounded-full mt-0.5 transition-colors ${activeTab === tab ? 'bg-[#E8CE8C]' : 'bg-transparent'}`} />
+              <span className="text-[11px] capitalize">{tab}</span>
             </button>
           ))}
         </div>
