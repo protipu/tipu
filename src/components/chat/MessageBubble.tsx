@@ -41,15 +41,15 @@ export function MessageBubble({ message, onDelete }: MessageBubbleProps) {
   };
 
   return (
-    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} animate-slide-up group`}>
+    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} group`}>
       {!isUser && (
         <div className="flex-shrink-0 mr-2 mt-auto">
           <div
-            className="w-[26px] h-[26px] rounded-full flex items-center justify-center text-[12px] border border-hairline"
+            className="w-[26px] h-[26px] rounded-full flex items-center justify-center text-[12px] border border-[rgba(201,162,75,0.16)]"
             style={{
               background: 'linear-gradient(160deg, #2A3358, #161C33)',
               fontFamily: 'var(--font-serif)',
-              color: 'var(--color-gold-soft)',
+              color: '#E8CE8C',
             }}
           >
             T
@@ -61,8 +61,8 @@ export function MessageBubble({ message, onDelete }: MessageBubbleProps) {
           <div
             className={`px-3.5 py-2.5 rounded-2xl rounded-bl-md border ${
               isError
-                ? 'bg-error/10 border-error/20 text-error'
-                : 'bg-surface border-hairline text-text'
+                ? 'bg-[#F87171]/10 border-[#F87171]/20 text-[#F87171]'
+                : 'bg-[#131829] border-[rgba(201,162,75,0.16)] text-[#EDE9DE]'
             } ${message.deleting ? 'opacity-50' : ''}`}
           >
             {message.retrying ? (
@@ -87,20 +87,20 @@ export function MessageBubble({ message, onDelete }: MessageBubbleProps) {
             ref={cardRef}
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
-            className={`px-3.5 py-2.5 rounded-2xl rounded-br-md border text-text transition-smooth ${
+            className={`px-3.5 py-2.5 rounded-2xl rounded-br-md border text-[#EDE9DE] transition-transform ${
               isError
-                ? 'bg-error/10 border-error/20 text-error'
-                : 'border-primary/30'
+                ? 'bg-[#F87171]/10 border-[#F87171]/20 text-[#F87171]'
+                : 'border-[rgba(201,162,75,0.32)]'
             } ${message.deleting ? 'opacity-50' : ''}`}
             style={{
-              background: isError ? undefined : 'var(--color-gold-dim)',
-              transition: 'transform 0.1s ease-out, box-shadow 0.3s ease',
+              background: isError ? undefined : 'rgba(201,162,75,0.14)',
+              transition: 'transform 0.1s ease-out',
             }}
           >
             {message.retrying ? (
               <div className="flex items-center gap-2 text-sm">
-                <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                <span className="text-text-muted">Retrying...</span>
+                <div className="w-4 h-4 border-2 border-[#C9A24B] border-t-transparent rounded-full animate-spin" />
+                <span className="text-[#8891A8]">Retrying...</span>
               </div>
             ) : (
               <p className="whitespace-pre-wrap text-sm leading-relaxed">{message.content}</p>
@@ -109,10 +109,10 @@ export function MessageBubble({ message, onDelete }: MessageBubbleProps) {
         )}
 
         <div className={`flex items-center gap-2 mt-1 px-0.5 ${isUser ? 'justify-end' : 'justify-start'}`}>
-          <span className="text-[10.5px] text-text-dim">{formatTime(message.createdAt)}</span>
+          <span className="text-[10.5px] text-[#5B6178]">{formatTime(message.createdAt)}</span>
           {message.error && !message.retrying && (
             <button
-              className="text-[10px] font-medium text-primary hover:text-primary-hover transition-smooth"
+              className="text-[10px] font-medium text-[#C9A24B] hover:text-[#E8CE8C] transition-colors"
               onClick={(e) => {
                 e.stopPropagation();
                 window.dispatchEvent(new CustomEvent('retry-message', { detail: message.id }));
@@ -123,7 +123,7 @@ export function MessageBubble({ message, onDelete }: MessageBubbleProps) {
           )}
           {isUser && onDelete && !message.error && (
             <button
-              className="text-[10px] font-medium text-text-dim hover:text-error opacity-0 group-hover:opacity-100 transition-smooth"
+              className="text-[10px] font-medium text-[#5B6178] hover:text-[#F87171] opacity-0 group-hover:opacity-100 transition-opacity"
               onClick={(e) => {
                 e.stopPropagation();
                 onDelete(message.id);

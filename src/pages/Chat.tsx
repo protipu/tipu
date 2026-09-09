@@ -32,15 +32,6 @@ const TAB_ICONS: Record<Tab, import('react').ReactElement> = {
   ),
 };
 
-function BackgroundOrbs() {
-  return (
-    <div className="fixed inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-      <div className="absolute -top-40 -left-20 w-80 h-80 rounded-full bg-primary/5 blur-[100px] animate-float" />
-      <div className="absolute top-2/3 -right-20 w-64 h-64 rounded-full bg-gold-soft/3 blur-[80px] animate-float-reverse" />
-    </div>
-  );
-}
-
 export function Chat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [sending, setSending] = useState(false);
@@ -200,22 +191,25 @@ export function Chat() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col" style={{ background: 'var(--gradient-bg)' }}>
-        <BackgroundOrbs />
-        <header className="glass-strong border-b border-hairline sticky top-0 z-10">
-          <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
+      <div className="min-h-screen flex flex-col" style={{ background: '#0A0D16' }}>
+        <header className="border-b border-[rgba(201,162,75,0.16)] sticky top-0 z-10" style={{ background: '#0A0D16' }}>
+          <div className="max-w-2xl mx-auto px-5 py-3 flex items-center gap-3">
             <div
-              className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-[#0A0D16]"
-              style={{ background: 'radial-gradient(circle at 30% 25%, #E8CE8C, #C9A24B 60%, #8a6b28 100%)', fontFamily: 'var(--font-serif)' }}
+              className="w-[42px] h-[42px] rounded-full flex items-center justify-center text-[18px] font-semibold text-[#0A0D16] flex-shrink-0"
+              style={{
+                background: 'radial-gradient(circle at 30% 25%, #E8CE8C, #C9A24B 60%, #8a6b28 100%)',
+                fontFamily: 'var(--font-serif)',
+                boxShadow: '0 0 0 1px rgba(201,162,75,0.35), 0 4px 14px rgba(201,162,75,0.18)',
+              }}
             >T</div>
-            <h1 className="text-xl font-bold text-gradient" style={{ fontFamily: 'var(--font-serif)' }}>Tipu</h1>
+            <h1 className="text-[19px] text-[#EDE9DE]" style={{ fontFamily: 'var(--font-serif)' }}>Tipu</h1>
           </div>
         </header>
-        <main className="flex-1 max-w-2xl mx-auto w-full flex flex-col px-4 py-8">
+        <main className="flex-1 max-w-2xl mx-auto w-full flex flex-col px-5 py-8">
           <div className="flex-1 flex items-center justify-center">
-            <div className="flex flex-col items-center gap-4 text-center animate-fade-in">
-              <div className="w-12 h-12 border-3 border-primary border-t-transparent rounded-full animate-spin" />
-              <p className="text-text-muted text-sm">Loading...</p>
+            <div className="flex flex-col items-center gap-4 text-center">
+              <div className="w-10 h-10 border-2 border-[#C9A24B] border-t-transparent rounded-full animate-spin" />
+              <p className="text-[#8891A8] text-sm">Loading...</p>
             </div>
           </div>
         </main>
@@ -224,12 +218,11 @@ export function Chat() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: 'var(--gradient-bg)' }}>
-      <BackgroundOrbs />
+    <div className="min-h-screen flex flex-col" style={{ background: '#0A0D16' }}>
 
       {/* Header — changes per tab */}
-      <header className="glass-strong border-b border-hairline sticky top-0 z-10 animate-slide-down">
-        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
+      <header className="border-b border-[rgba(201,162,75,0.16)] sticky top-0 z-10" style={{ background: '#0A0D16' }}>
+        <div className="max-w-2xl mx-auto px-5 py-3 flex items-center gap-3">
           {activeTab === 'chat' && (
             <>
               <div
@@ -241,9 +234,9 @@ export function Chat() {
                 }}
               >T</div>
               <div className="flex-1 min-w-0">
-                <div className="text-[19px] text-text" style={{ fontFamily: 'var(--font-serif)' }}>Tipu</div>
-                <div className="text-xs text-text-muted flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-success inline-block" style={{ boxShadow: '0 0 6px rgba(111,207,151,0.7)' }} />
+                <div className="text-[19px] text-[#EDE9DE]" style={{ fontFamily: 'var(--font-serif)' }}>Tipu</div>
+                <div className="text-[12px] text-[#8891A8] flex items-center gap-1.5">
+                  <span className="w-[6px] h-[6px] rounded-full bg-[#6FCF97] inline-block" style={{ boxShadow: '0 0 6px rgba(111,207,151,0.7)' }} />
                   Active
                 </div>
               </div>
@@ -251,14 +244,14 @@ export function Chat() {
           )}
           {activeTab === 'memory' && (
             <div className="flex-1 min-w-0">
-              <div className="text-[19px] text-text" style={{ fontFamily: 'var(--font-serif)' }}>Memory</div>
-              <div className="text-xs text-text-muted">What Tipu has learned about you</div>
+              <div className="text-[19px] text-[#EDE9DE]" style={{ fontFamily: 'var(--font-serif)' }}>Memory</div>
+              <div className="text-[12px] text-[#8891A8]">What Tipu has learned about you</div>
             </div>
           )}
           {activeTab === 'settings' && (
             <div className="flex-1 min-w-0">
-              <div className="text-[19px] text-text" style={{ fontFamily: 'var(--font-serif)' }}>Settings</div>
-              <div className="text-xs text-text-muted">Your account & preferences</div>
+              <div className="text-[19px] text-[#EDE9DE]" style={{ fontFamily: 'var(--font-serif)' }}>Settings</div>
+              <div className="text-[12px] text-[#8891A8]">Your account & preferences</div>
             </div>
           )}
         </div>
@@ -289,21 +282,21 @@ export function Chat() {
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="glass-strong border-t border-hairline sticky bottom-0 z-10">
+      <nav className="border-t border-[rgba(201,162,75,0.16)] sticky bottom-0 z-10" style={{ background: '#0A0D16' }}>
         <div className="max-w-2xl mx-auto flex">
           {(Object.keys(TAB_ICONS) as Tab[]).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`flex-1 flex flex-col items-center gap-1 py-2.5 transition-smooth ${
+              className={`flex-1 flex flex-col items-center gap-1 py-2.5 transition-colors ${
                 activeTab === tab
-                  ? 'text-gold-soft'
-                  : 'text-text-dim hover:text-text-muted'
+                  ? 'text-[#E8CE8C]'
+                  : 'text-[#5B6178] hover:text-[#8891A8]'
               }`}
             >
               {TAB_ICONS[tab]}
               <span className="text-[11px] font-medium capitalize">{tab}</span>
-              <div className={`w-1 h-1 rounded-full mt-0.5 transition-smooth ${activeTab === tab ? 'bg-gold-soft' : 'bg-transparent'}`} />
+              <div className={`w-1 h-1 rounded-full mt-0.5 transition-colors ${activeTab === tab ? 'bg-[#E8CE8C]' : 'bg-transparent'}`} />
             </button>
           ))}
         </div>
