@@ -61,7 +61,7 @@ function WelcomeScreen() {
   );
 }
 
-export function MessageList({ messages, isTyping = false, error, onDelete, onRetry, onOpenFocus, hasMore = false, loadingMore = false, onLoadMore }: MessageListProps) {
+export function MessageList({ messages, isTyping = false, onDelete, onOpenFocus, hasMore = false, loadingMore = false, onLoadMore }: MessageListProps) {
   const endRef = useRef<HTMLDivElement>(null);
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, isTyping]);
 

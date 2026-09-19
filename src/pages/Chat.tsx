@@ -1,10 +1,10 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useChat } from '../hooks/useChat';
-import { useChatMemory } from '../hooks/useChatMemory';
+
 import { useFocusView } from '../hooks/useFocusView';
 import { renderMarkdown } from '../utils/format';
-import { SceneBackground, WorkspaceHeader, WorkspaceControls, TipuCharacter } from '../components/workspace';
+import { SceneBackground, WorkspaceHeader, WorkspaceControls } from '../components/workspace';
 import { FocusView } from '../components/workspace/FocusView';
 import { MessageList } from '../components/chat/MessageList';
 import { MessageInput } from '../components/chat/MessageInput';
@@ -15,13 +15,7 @@ export function Chat() {
   const { signOut } = useAuth();
   const [view, setView] = useState<'chat' | 'memory' | 'settings'>('chat');
   const chat = useChat();
-  const memory = useChatMemory();
   const focusView = useFocusView();
-
-  const handleRetry = useCallback((messageId: string) => {
-    const msg = chat.messages.find(m => m.id === messageId);
-    if (msg) chat.retryMessage(msg.content);
-  }, [chat]);
 
   return (
     <div className="h-screen flex flex-col relative overflow-hidden" style={{ background: 'var(--void)' }}>
@@ -54,8 +48,6 @@ export function Chat() {
                 <MessageList
                   messages={chat.messages}
                   isTyping={chat.isTyping}
-                  error={chat.error}
-                  onRetry={handleRetry}
                   onDelete={chat.deleteMessage}
                   onOpenFocus={(content) => focusView.open(content)}
                 />
