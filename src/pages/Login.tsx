@@ -19,53 +19,53 @@ export function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12" style={{ background: '#212121' }}>
+    <div className="min-h-screen flex items-center justify-center px-4 py-12" style={{ background: 'var(--void)' }}>
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4" style={{ background: '#C9A24B', color: '#212121' }}>T</div>
-          <h1 className="text-2xl font-semibold text-white">Tipu</h1>
-          <p className="text-sm text-white/40 mt-1">Your personal AI companion</p>
+          <div className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4" style={{ background: 'var(--gold)', color: 'var(--void)', fontFamily: 'var(--font-serif)' }}>T</div>
+          <h1 className="text-2xl font-semibold" style={{ color: 'var(--text)', fontFamily: 'var(--font-serif)' }}>Tipu</h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>Your personal AI companion</p>
         </div>
 
         {/* Card */}
-        <div className="rounded-2xl p-6" style={{ background: '#2f2f2f', border: '1px solid rgba(255,255,255,0.1)' }}>
+        <div className="rounded-2xl p-6" style={{ background: 'var(--surface-raised)', border: '1px solid var(--border-strong)' }}>
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div className="p-3 rounded-xl text-sm" style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.2)', color: '#F87171' }}>
+              <div className="p-3 rounded-xl text-sm" style={{ background: 'rgba(212,106,106,0.08)', border: '1px solid rgba(212,106,106,0.2)', color: 'var(--danger)' }}>
                 {error}
               </div>
             )}
             <div>
-              <label htmlFor="email" className="block text-xs text-white/40 mb-1.5 font-medium">Email</label>
+              <label htmlFor="email" className="block text-xs mb-1.5 font-medium" style={{ color: 'var(--text-muted)' }}>Email</label>
               <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email"
-                className="w-full px-3 py-2.5 text-sm rounded-xl text-white placeholder:text-white/25 focus:outline-none transition-colors"
-                style={{ background: '#212121', border: '1px solid rgba(255,255,255,0.12)' }}
+                className="w-full px-3 py-2.5 text-sm rounded-xl focus:outline-none transition-colors"
+                style={{ background: 'var(--surface)', border: '1px solid var(--border-strong)', color: 'var(--text)' }}
                 placeholder="you@example.com" disabled={loading} />
             </div>
             <div>
-              <label htmlFor="password" className="block text-xs text-white/40 mb-1.5 font-medium">Password</label>
+              <label htmlFor="password" className="block text-xs mb-1.5 font-medium" style={{ color: 'var(--text-muted)' }}>Password</label>
               <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required
                 autoComplete={isSignUp ? 'new-password' : 'current-password'}
-                className="w-full px-3 py-2.5 text-sm rounded-xl text-white placeholder:text-white/25 focus:outline-none transition-colors"
-                style={{ background: '#212121', border: '1px solid rgba(255,255,255,0.12)' }}
+                className="w-full px-3 py-2.5 text-sm rounded-xl focus:outline-none transition-colors"
+                style={{ background: 'var(--surface)', border: '1px solid var(--border-strong)', color: 'var(--text)' }}
                 placeholder="••••••••" disabled={loading} />
             </div>
             <button type="submit" disabled={loading}
-              className="w-full py-2.5 px-6 text-sm font-medium text-[#212121] rounded-xl transition-all disabled:opacity-50 active:scale-[0.98]"
-              style={{ background: '#C9A24B' }}>
+              className="w-full py-2.5 px-6 text-sm font-medium rounded-xl transition-all disabled:opacity-50 active:scale-[0.98]"
+              style={{ background: 'var(--gold)', color: 'var(--void)' }}>
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
-                  <span className="w-4 h-4 border-2 border-[#212121] border-t-transparent rounded-full animate-spin" />
+                  <span className="w-4 h-4 border-2 rounded-full animate-spin" style={{ borderColor: 'var(--void)', borderTopColor: 'transparent' }} />
                   Please wait...
                 </span>
               ) : (isSignUp ? 'Create account' : 'Login')}
             </button>
           </form>
-          <p className="mt-4 text-center text-sm text-white/40">
+          <p className="mt-4 text-center text-sm" style={{ color: 'var(--text-muted)' }}>
             {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
             <button type="button" onClick={() => { setIsSignUp(!isSignUp); setError(null); }}
-              className="text-[#C9A24B] hover:text-[#E8CE8C] font-medium transition-colors">
+              className="font-medium transition-colors" style={{ color: 'var(--gold)' }}>
               {isSignUp ? 'Sign in' : 'Sign up'}
             </button>
           </p>

@@ -1,23 +1,23 @@
 # Tipu
 
-A personal AI companion web app — a virtual version of me (Ragib), without the emotions and bad habits.
+A personal AI companion web app — a warm, immersive workspace where your AI friend remembers everything about you.
 
 ## Overview
 
-Tipu is a single-user chat interface that:
-- Converses naturally like a friend
-- Quietly extracts and stores long-term facts about the user's life
-- Uses stored context to give increasingly personal, relevant replies over time
+Tipu is a full-screen workspace experience that:
+- Converses naturally like a close friend, with concise replies
+- Quietly extracts and stores long-term facts about your life
+- Uses stored context to give increasingly personal, relevant replies
 - Remembers with categories, importance levels, and confidence scores
 - Deduplicates and supersedes outdated memories automatically
-- Renders AI replies with proper markdown (tables, bold, headings)
+- Lives inside a warm home office environment with ambient lighting
 
 ## Tech Stack
 
 - **Frontend**: React 19 + Vite + TypeScript (strict mode)
-- **Styling**: Tailwind CSS v4 (dark-void + gold cinematic theme, Fraunces + Inter fonts)
+- **Styling**: Tailwind CSS v4 (warm dark palette, Fraunces + Inter fonts)
 - **Markdown**: react-markdown + remark-gfm for AI message rendering
-- **State**: React Context + built-in hooks only
+- **State**: React Context + custom hooks
 - **Backend**: Supabase (Postgres, Auth, Edge Functions)
 - **AI**: Groq API (`groq/compound` model) via Supabase Edge Functions
 - **Hosting**: Vercel (auto-deploy on push to `main`)
@@ -28,17 +28,17 @@ Tipu is a single-user chat interface that:
 ## Architecture
 
 ```
-┌─────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│   Browser   │────▶│  Supabase Edge   │────▶│   Groq API      │
-│   (React)   │     │  Function: chat  │     │  - compound     │
-└─────────────┘     └──────────────────┘     │  - llama-3.3-70b│
-       │                    │                └─────────────────┘
-       │                    ▼
-       │            ┌──────────────────┐
-       └───────────▶│   Supabase DB    │
-                    │  - messages      │
-                    │  - memory_facts  │
-                    └──────────────────┘
+┌─────────────┐     ┌──────────────────┐     ┌────────────────┐
+│   Browser   ├────▶│  Supabase Edge   ├────▶│   Groq API     │
+│   (React)   │     │  Function: chat  │     │  - compound    │
+└──────┬──────┘     └──────────────────┘     │  - llama-3.3-70b
+       │                                      └────────────────
+       │
+       │        ┌──────────────────┐
+       └───────▶│   Supabase DB    │
+                │  - messages      │
+                │  - memory_facts  │
+                └──────────────────┘
 ```
 
 ## Database Schema
@@ -53,7 +53,7 @@ create table messages (
   created_at timestamptz not null default now()
 );
 
--- memory_facts: enhanced long-term memory (Memory 2.0)
+-- memory_facts: enhanced long-term memory
 create table memory_facts (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users not null,
@@ -75,94 +75,100 @@ create index idx_memory_facts_user_category on memory_facts(user_id, category);
 create index idx_memory_facts_importance on memory_facts(importance desc);
 ```
 
-## Build Phases
+## Features
 
-| Phase | Status | Description |
-|-------|--------|-------------|
-| 0 | ✅ | Vite + React + TS + Tailwind scaffold, Vercel config |
-| 1 | ✅ | Supabase email/password auth, login screen, session persistence, logout |
-| 2 | ✅ | Core chat loop (UI + Edge Function → Groq API, error/timeout/retry handling) |
-| 3 | ✅ | Persist messages, load conversation history on reload |
-| 4 | ✅ | Long-term memory (fact extraction + recall in system prompt) |
-| 5 | ✅ | UI polish — blue/white modern theme |
-| 6 | ✅ | Capacitor Android APK |
-| 7 | ✅ | Security hardening, UX improvements, testing, CI/CD |
-| Phase 2 | ✅ | Foundation fixes — delete, CORS, timestamps, pagination, dead code |
-| Phase 3 | ✅ | **Memory 2.0** — enhanced memory with categories, importance, confidence, dedup |
-| Phase 4 | ✅ | **UI Redesign** — dark companion theme, glass morphism, 3D card effects |
-| Phase 5 | ✅ | **Gold Cinematic UI** — dark-void theme, Fraunces/Inter fonts, ledger tables, markdown rendering |
-| Phase A | ✅ | Fix MemoryPage — send `?section=memories` to Edge Function GET handler |
-| Phase B | ✅ | Fix chat pagination — send `offset`/`limit` params, load more button |
-| Phase C | ✅ | Fix MemoryPage/MemoryCard — replace broken CSS classes with inline hex values |
-| Phase D | ✅ | **Memory extraction** — Groq Llama extracts durable facts after each chat message |
-| Phase E | ✅ | **Deduplication** — skip >90% similar, supersede >60% same category |
-| Phase F | ✅ | **Relevance retrieval** — keyword matching selects top 5 memories per message |
-| Phase G | ✅ | **Memory creation UI** — FAB button, create modal with category/importance |
-| Phase H | ✅ | Align Login/Settings with flat theme — inline hex values |
-
-## What's Implemented
+### Warm Workspace Environment
+- **CSS home office scene**: Sky gradient, city skyline, window frame, bookshelf, desk surface, lamp glow
+- **TipuCharacter**: Gold avatar with breathing animation and mood states (idle, thinking, happy, listening)
+- **SceneBackground**: Layered CSS gradients creating depth without images
+- **Glassmorphism**: Frosted glass effects on header and bottom nav
+- **Bottom controls**: Message / Memory / Settings tab navigation
 
 ### Memory 2.0
 - **11 categories**: Personal, Preference, Work, People, Relationship, Goal, Project, Event, Habit, Health, General
-- **Importance scoring**: 1-100 scale, memories sorted by importance
-- **Confidence scoring**: 1-100 scale, low-confidence facts skipped
+- **Importance scoring**: 1–100 scale, memories sorted by importance
+- **Confidence scoring**: 1–100 scale, low-confidence facts skipped
 - **Status system**: Active, Archived, Superseded
-- **Deduplication**: >90% similar memories skipped, >60% same category superseded
-- **Superseding**: Outdated memories replaced with updated versions
-- **Memory UI**: Full-featured memory page with category filters, search bar, edit, delete, archive, create
+- **Deduplication**: >90% similar skipped, >60% same category superseded
 - **Auto-extraction**: Groq Llama 3.3 70B extracts durable facts after each chat message
 - **Relevance retrieval**: Keyword matching selects top 5 most relevant memories per message
-- **Create memories manually**: FAB button with category selector and importance slider
+- **Memory UI**: Category filters, search, edit, delete, archive, create via FAB + modal
 
 ### AI Response Quality
-- **Concise replies**: System prompt enforces 1-3 sentence default
-- **No unnecessary recapping**: AI doesn't restate conversation history on every message
-- **Markdown rendering**: Tables, bold, headings rendered properly via react-markdown + remark-gfm
-- **Ledger-style tables**: Spending breakdowns display as clean tabular data
-- **Language preference**: Reads Bengali/other language preference from memory_facts and passes to Groq
-- **429 rate limit handling**: Friendly "Tipu is busy" message instead of raw error
-- **Dual-model architecture**: `groq/compound` for chat, `groq/llama-3.3-70b-versatile` for memory extraction
+- **Concise replies**: System prompt enforces 1–3 sentence default
+- **Markdown rendering**: Tables, bold, headings via react-markdown + remark-gfm
+- **Language preference**: Reads Bengali/other language from memory_facts
+- **429 rate limit handling**: Friendly "Tipu is busy" message
+- **Dual-model architecture**: `groq/compound` for chat, `groq/llama-3.3-70b-versatile` for extraction
 
 ### Security
-- CORS restricted to `tipu.vercel.app` + `tipu-pearl.vercel.app` + `tipu.mithebangla.store` + localhost
+- CORS restricted to explicit allowlist
 - Environment variable validation at Edge Function startup
 - Service role key with manual JWT verification
 - Input validation (max 4000 chars per message)
-- Edge Function uses `Deno.serve()` (compatible with latest Supabase Edge Runtime)
 
-### UX Improvements
+### UX
 - **Typing indicator**: Animated dots while assistant responds
 - **Message timestamps**: Each message shows time
 - **Delete messages**: Hover to reveal delete button
 - **Message history**: Load older messages with pagination
-- **Loading skeleton**: Skeleton placeholders while history loads
-- **Error boundary**: Graceful error handling with retry/reload options
+- **FocusView**: Full-screen reading mode for long AI responses
+- **Error boundary**: Graceful error handling with retry/reload
 - **Memory page**: Browse, filter, search, edit, delete, archive memories
-- **Settings page**: Profile, preferences (language, dark theme, check-in reminder), memory/data actions, account
+- **Settings page**: Profile, preferences, memory/data actions, account
 
 ### Code Quality
 - **TypeScript strict mode**: Full type safety
-- **13 unit tests**: ErrorBoundary, MessageBubble, MessageInput components
-- **Vitest**: Fast test runner with React Testing Library (automatic JSX runtime)
+- **13 unit tests**: ErrorBoundary, MessageBubble, MessageInput
+- **Custom hooks**: `useChat`, `useChatMemory`, `useFocusView`
+- **Component architecture**: workspace/, chat/, memory/ separation
 
-### DevOps
-- **GitHub Actions**: Auto-deploy to Vercel on push to `main`
-- **Edge Function deploy**: Separate workflow for Supabase functions
+## Project Structure
 
-### UI/UX
-- **Dark-void + gold cinematic theme**: `#0A0D16` background, `#C9A24B` gold accents
-- **Typography**: Fraunces (serif) for headings, Inter (sans-serif) for body text
-- **Gold-tinted user bubbles**: Right-aligned with subtle gold background
-- **Tipu avatar ring**: Radial gradient gold circle with "T" initial
-- **Ledger-style tables**: Clean tabular data display for spending breakdowns
-- **Glass morphism**: Frosted glass effects on headers, nav, cards, and input bars
-- **3D card effects**: Interactive tilt on hover for message bubbles and memory cards
-- **Animated orbs**: Floating background orbs with slow drift animations
-- **Smooth animations**: Entrance slide-ups, scale-ins, fade-ins, wave typing indicator
-- **Bottom navigation**: Chat, Memory, Settings tabs with gold active dot indicator
-- **Suggestion chips**: Quick-reply suggestions on empty chat
-- **PWA manifest**: Installable as Progressive Web App
-- **Open Graph tags**: Social sharing previews
+```
+src/
+├── components/
+│   ├── workspace/       # Workspace shell components
+│   │   ├── SceneBackground.tsx   # CSS office environment
+│   │   ├── TipuCharacter.tsx     # Gold avatar with animation
+│   │   ├── WorkspaceHeader.tsx   # Glassmorphism header
+│   │   ├── WorkspaceControls.tsx # Bottom nav (Message/Memory/Settings)
+│   │   ├── FocusView.tsx         # Full-screen reading mode
+│   │   └── index.ts
+│   ├── chat/            # Chat components
+│   │   ├── MessageBubble.tsx
+│   │   ├── MessageInput.tsx
+│   │   └── MessageList.tsx
+│   ├── memory/          # Memory components
+│   │   ├── MemoryPage.tsx
+│   │   └── MemoryCard.tsx
+│   └── ErrorBoundary.tsx
+├── hooks/               # Custom React hooks
+│   ├── useChat.ts
+│   ├── useChatMemory.ts
+│   └── useFocusView.ts
+├── pages/
+│   ├── Chat.tsx         # Main workspace orchestrator
+│   ├── Login.tsx
+│   └── Settings.tsx
+├── context/
+│   └── AuthContext.tsx
+├── lib/
+│   └── supabase.ts
+├── types/
+│   ├── chat.ts
+│   └── memory.ts
+├── utils/
+│   └── format.tsx       # Markdown renderer
+├── styles/
+│   └── globals.css      # Warm palette, animations, markdown
+├── test/
+│   ├── MessageBubble.test.tsx
+│   ├── MessageInput.test.tsx
+│   └── ErrorBoundary.test.tsx
+├── App.tsx
+└── main.tsx
+```
 
 ## Development
 
@@ -192,7 +198,7 @@ npm run lint
 ## Deployment
 
 - **Vercel**: Auto-deploys on push to `main` via GitHub Actions
-- **Edge Functions**: Deploy via GitHub Actions or `npx supabase functions deploy chat`
+- **Edge Functions**: Deploy via `npx supabase functions deploy chat`
 - **Environment variables** (set in Vercel dashboard):
   - `VITE_SUPABASE_URL`
   - `VITE_SUPABASE_ANON_KEY`
@@ -200,10 +206,6 @@ npm run lint
   - `GROQ_API_KEY`
   - `SUPABASE_SERVICE_ROLE_KEY`
   - `SUPABASE_URL`
-
-## Design Reference
-
-The full static mockup is at `design/tipu-app-full.html` — a self-contained HTML file with all CSS inline, showing the Chat, Memory, and Settings screens with the gold cinematic theme.
 
 ## Android APK Build
 

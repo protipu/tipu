@@ -1,17 +1,19 @@
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { Message } from '../../types/chat';
+import { TipuCharacter } from '../workspace/TipuCharacter';
 
 interface MessageBubbleProps {
   message: Message;
   onDelete?: (messageId: string) => void;
+  onOpenFocus?: (content: string) => void;
 }
 
 function formatTime(isoString: string): string {
   return new Date(isoString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-export function MessageBubble({ message, onDelete }: MessageBubbleProps) {
+export function MessageBubble({ message, onDelete, onOpenFocus }: MessageBubbleProps) {
   const isUser = message.role === 'user';
   const isError = message.error;
 
@@ -23,12 +25,19 @@ export function MessageBubble({ message, onDelete }: MessageBubbleProps) {
         {isUser ? (
           <div className="flex justify-end">
             <div
-              className={`px-4 py-3 rounded-2xl rounded-br-md text-[15px] leading-relaxed ${isError ? 'bg-red-500/10 text-red-400 border border-red-500/20' : ''} ${message.deleting ? 'opacity-50' : ''}`}
-              style={!isError ? { background: '#2f2f2f', border: '1px solid rgba(255,255,255,0.12)' } : undefined}
+              className={`px-4 py-3 rounded-2xl rounded-br-md text-[15px] leading-relaxed ${isError ? 'text-red-400' : ''} ${message.deleting ? 'opacity-50' : ''}`}
+              style={!isError ? {
+                background: 'linear-gradient(135deg, rgba(201,162,75,0.15) 0%, rgba(201,162,75,0.08) 100%)',
+                border: '1px solid rgba(201,162,75,0.2)',
+                color: 'var(--text)',
+              } : {
+                background: 'rgba(212,106,106,0.1)',
+                border: '1px solid rgba(212,106,106,0.2)',
+              }}
             >
               {message.retrying ? (
-                <div className="flex items-center gap-2 text-sm text-white/50">
-                  <div className="w-4 h-4 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
+                <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-muted)' }}>
+                  <div className="w-4 h-4 border-2 rounded-full animate-spin" style={{ borderColor: 'var(--border-strong)', borderTopColor: 'var(--gold)' }} />
                   Retrying...
                 </div>
               ) : (
@@ -39,31 +48,37 @@ export function MessageBubble({ message, onDelete }: MessageBubbleProps) {
         ) : (
           <div className="flex gap-3">
             <div className="flex-shrink-0 mt-1">
-              <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold" style={{ background: '#C9A24B', color: '#212121' }}>T</div>
+              <TipuCharacter size="sm" mood={message.retrying ? 'thinking' : 'idle'} />
             </div>
             <div className={`flex-1 min-w-0 ${message.deleting ? 'opacity-50' : ''}`}>
               {message.retrying ? (
-                <div className="flex items-center gap-2 text-sm text-white/50 py-2">
-                  <div className="w-4 h-4 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
+                <div className="flex items-center gap-2 text-sm py-2" style={{ color: 'var(--text-muted)' }}>
+                  <div className="w-4 h-4 border-2 rounded-full animate-spin" style={{ borderColor: 'var(--border-strong)', borderTopColor: 'var(--gold)' }} />
                   Retrying...
                 </div>
               ) : isError ? (
-                <div className="text-red-400 text-[15px] leading-relaxed py-2">{message.content}</div>
+                <div className="text-[15px] leading-relaxed py-2" style={{ color: 'var(--danger)' }}>{message.content}</div>
               ) : (
-                <div className="text-white text-[15px] leading-relaxed markdown-content py-2">
+                <div className="text-[15px] leading-relaxed markdown-content py-2" style={{ color: 'var(--text)' }}>
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
                 </div>
               )}
               <div className="flex items-center gap-3 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <span className="text-[11px] text-white/25">{formatTime(message.createdAt)}</span>
+                <span className="text-[11px]" style={{ color: 'var(--text-faint)' }}>{formatTime(message.createdAt)}</span>
                 {message.error && !message.retrying && (
-                  <button className="text-[11px] text-[#C9A24B] hover:text-[#E8CE8C] transition-colors"
+                  <button className="text-[11px] transition-colors" style={{ color: 'var(--gold)' }}
                     onClick={() => window.dispatchEvent(new CustomEvent('retry-message', { detail: message.id }))}>
                     Retry
                   </button>
                 )}
+                {!isUser && !isError && !message.retrying && onOpenFocus && (
+                  <button className="text-[11px] transition-colors hover:text-white" style={{ color: 'var(--text-faint)' }}
+                    onClick={() => onOpenFocus(message.content)}>
+                    Expand
+                  </button>
+                )}
                 {isUser && onDelete && !message.error && (
-                  <button className="text-[11px] text-white/25 hover:text-red-400 transition-colors"
+                  <button className="text-[11px] transition-colors hover:text-red-400" style={{ color: 'var(--text-faint)' }}
                     onClick={() => onDelete(message.id)}>
                     Delete
                   </button>

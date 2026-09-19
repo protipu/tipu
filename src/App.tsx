@@ -8,10 +8,10 @@ function AppContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#212121' }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--void)' }}>
         <div className="text-center">
-          <div className="w-8 h-8 border-2 border-white/20 border-t-white/60 rounded-full animate-spin mx-auto mb-3"></div>
-          <p className="text-white/40 text-sm">Loading...</p>
+          <div className="w-8 h-8 border-2 rounded-full animate-spin mx-auto mb-3" style={{ borderColor: 'var(--border-strong)', borderTopColor: 'var(--gold)' }} />
+          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Loading...</p>
         </div>
       </div>
     );

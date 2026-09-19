@@ -44,59 +44,62 @@ export function MemoryCard({ memory, onUpdate, onDelete, onArchive }: MemoryCard
   return (
     <div ref={cardRef} onMouseMove={handleMouseMove} onMouseLeave={() => { if (cardRef.current) cardRef.current.style.transform = ''; }}
       className="rounded-xl group transition-transform"
-      style={{ background: '#2f2f2f', border: '1px solid rgba(255,255,255,0.1)', transition: 'transform 0.1s ease-out' }}>
+      style={{ background: 'var(--surface-raised)', border: '1px solid var(--border-strong)', transition: 'transform 0.1s ease-out' }}>
       <div className="p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
             {editing ? (
               <div className="space-y-3">
                 <textarea value={editFact} onChange={(e) => setEditFact(e.target.value)}
-                  className="w-full px-3 py-2 text-sm rounded-xl focus:outline-none resize-none text-white placeholder:text-white/30"
-                  style={{ background: '#212121', border: '1px solid rgba(255,255,255,0.12)' }} rows={3} autoFocus />
+                  className="w-full px-3 py-2 text-sm rounded-xl focus:outline-none resize-none"
+                  style={{ background: 'var(--surface)', border: '1px solid var(--border-strong)', color: 'var(--text)' }} rows={3} autoFocus />
                 <div className="flex items-center gap-2">
-                  <label className="text-xs text-white/40 font-medium">Importance:</label>
+                  <label className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>Importance:</label>
                   <input type="range" min="1" max="100" value={editImportance} onChange={(e) => setEditImportance(parseInt(e.target.value))}
-                    className="flex-1 h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-[#C9A24B]" />
-                  <span className="text-xs text-white/50 font-mono w-8 text-right">{editImportance}</span>
+                    className="flex-1 h-1.5 rounded-full appearance-none cursor-pointer" style={{ background: 'rgba(255,255,255,0.1)', accentColor: 'var(--gold)' }} />
+                  <span className="text-xs font-mono w-8 text-right" style={{ color: 'var(--text-muted)' }}>{editImportance}</span>
                 </div>
                 <div className="flex gap-2">
                   <button onClick={handleSave} disabled={saving || !editFact.trim()}
-                    className="px-3.5 py-1.5 text-xs font-medium text-[#212121] rounded-lg transition-colors disabled:opacity-50"
-                    style={{ background: '#C9A24B' }}>{saving ? 'Saving...' : 'Save'}</button>
+                    className="px-3.5 py-1.5 text-xs font-medium rounded-lg transition-colors disabled:opacity-50"
+                    style={{ background: 'var(--gold)', color: 'var(--void)' }}>{saving ? 'Saving...' : 'Save'}</button>
                   <button onClick={handleCancel}
-                    className="px-3.5 py-1.5 text-xs font-medium text-white/50 hover:text-white rounded-lg transition-colors"
-                    style={{ border: '1px solid rgba(255,255,255,0.12)' }}>Cancel</button>
+                    className="px-3.5 py-1.5 text-xs font-medium rounded-lg transition-colors"
+                    style={{ color: 'var(--text-muted)', border: '1px solid var(--border-strong)' }}>Cancel</button>
                 </div>
               </div>
             ) : (
-              <p className="text-[14px] text-white leading-relaxed">{memory.fact}</p>
+              <p className="text-[14px] leading-relaxed" style={{ color: 'var(--text)' }}>{memory.fact}</p>
             )}
           </div>
           {!editing && (
             <div className="relative">
               <button onClick={() => setShowActions(!showActions)}
-                className="p-1.5 text-white/25 hover:text-white/50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
-                style={{ border: '1px solid transparent' }}>
+                className="p-1.5 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                style={{ color: 'var(--text-faint)' }}>
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01" />
                 </svg>
               </button>
               {showActions && (
                 <div className="absolute right-0 top-9 z-10 rounded-xl py-1 min-w-[130px]"
-                  style={{ background: '#212121', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 8px 32px rgb(0 0 0 / 0.5)' }}>
+                  style={{ background: 'var(--surface)', border: '1px solid var(--border-strong)', boxShadow: '0 8px 32px rgb(0 0 0 / 0.5)' }}>
                   <button onClick={() => { setEditing(true); setShowActions(false); }}
-                    className="w-full px-3 py-2 text-left text-xs text-white/70 hover:bg-white/5 transition-colors flex items-center gap-2">
+                    className="w-full px-3 py-2 text-left text-xs transition-colors flex items-center gap-2"
+                    style={{ color: 'var(--text-muted)' }}>
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                     Edit
                   </button>
                   <button onClick={() => { onArchive(memory.id); setShowActions(false); }}
-                    className="w-full px-3 py-2 text-left text-xs text-white/70 hover:bg-white/5 transition-colors flex items-center gap-2">
+                    className="w-full px-3 py-2 text-left text-xs transition-colors flex items-center gap-2"
+                    style={{ color: 'var(--text-muted)' }}>
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>
                     Archive
                   </button>
-                  <div className="mx-2 my-1" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }} />
+                  <div className="mx-2 my-1" style={{ borderTop: '1px solid var(--border)' }} />
                   <button onClick={() => { onDelete(memory.id); setShowActions(false); }}
-                    className="w-full px-3 py-2 text-left text-xs text-red-400 hover:bg-red-400/5 transition-colors flex items-center gap-2">
+                    className="w-full px-3 py-2 text-left text-xs transition-colors flex items-center gap-2"
+                    style={{ color: 'var(--danger)' }}>
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                     Delete
                   </button>
@@ -107,8 +110,8 @@ export function MemoryCard({ memory, onUpdate, onDelete, onArchive }: MemoryCard
         </div>
       </div>
       {!editing && (
-        <div className="px-4 pb-3 flex items-center justify-between text-[10px] text-white/25">
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-medium" style={{ background: 'rgba(201,162,75,0.12)', color: '#E8CE8C' }}>
+        <div className="px-4 pb-3 flex items-center justify-between text-[10px]" style={{ color: 'var(--text-faint)' }}>
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-medium" style={{ background: 'var(--gold-dim)', color: 'var(--gold-soft)' }}>
             {meta.icon} {meta.label}
           </span>
           <span>{timeAgo(memory.updated_at || memory.created_at)}</span>
